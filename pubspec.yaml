@@ -9,6 +9,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # 网络请求
+  dio: ^5.9.0
+
+  # 状态管理
+  get: ^4.7.3
+
+  # 屏幕适配
+  flutter_screenutil: ^5.9.3
+
+  # 本地存储（存偏好设置、token等）
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
