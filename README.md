@@ -13,6 +13,8 @@ lib/
 │
 ├── components/          # [通用组件] (widgets)
 │
+├── controllers/         # [全局控制器]
+│
 ├── core/                # [核心逻辑]
 │   ├── net/             # 网络封装 (Dio Client, Interceptors)
 │   └── utils/           # 工具类 (DateUtil, StorageUtil...)

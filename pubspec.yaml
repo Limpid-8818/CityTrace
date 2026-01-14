@@ -16,16 +16,24 @@ dependencies:
   # 状态管理
   get: ^4.7.3
 
+  # JSON 序列化注解
+  json_annotation: ^4.9.0
+
   # 屏幕适配
   flutter_screenutil: ^5.9.3
 
   # 本地存储（存偏好设置、token等）
   shared_preferences: ^2.5.4
 
+  # Toast 弹窗
+  fluttertoast: ^9.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.10.5
+  json_serializable: ^6.11.4
 
 flutter:
   uses-material-design: true
