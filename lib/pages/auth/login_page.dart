@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'login_controller.dart';
+
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // 注入控制器
+    final controller = Get.put(LoginController());
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            // 标题
+            Obx(
+              () => Text(
+                controller.isLogin.value ? "欢迎回来" : "加入城市寻迹",
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "用AI丈量城市，让记忆自动成书",
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 48),
+
+            // 表单区域
+            Form(
+              child: Column(
+                children: [
+                  // 注册模式下显示用户名输入框
+                  Obx(
+                    () => controller.isLogin.value
+                        ? const SizedBox.shrink()
+                        : _buildTextField(
+                            controller: controller.usernameController,
+                            hint: "用户名",
+                            icon: Icons.person_outline,
+                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: controller.accountController,
+                    hint: "账号 / 手机号",
+                    icon: Icons.alternate_email,
+                  ),
+                  const SizedBox(height: 16),
+                  Obx(
+                    () => _buildTextField(
+                      controller: controller.passwordController,
+                      hint: "密码",
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      obscureText: controller.obscureText.value,
+                      onSuffixIconPressed: () =>
+                          controller.obscureText.toggle(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // 登录/注册 按钮
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: Obx(
+                () => ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () => controller.submit(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF009688),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: controller.isLoading.value
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          controller.isLogin.value ? "登录" : "立即注册",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 切换模式链接
+            Center(
+              child: TextButton(
+                onPressed: () => controller.toggleMode(),
+                child: Obx(
+                  () => Text(
+                    controller.isLogin.value ? "没有账号？点击注册" : "已有账号？返回登录",
+                    style: const TextStyle(color: Color(0xFF009688)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 封装输入框通用样式
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onSuffixIconPressed,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, color: Colors.grey),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey,
+                ),
+                onPressed: onSuffixIconPressed,
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}

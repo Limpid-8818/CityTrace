@@ -1,6 +1,17 @@
+import 'package:citytrace/core/utils/storage_util.dart';
+import 'package:get/get.dart';
+
+import 'common/routes/app_routes.dart';
+import 'controllers/user_controller.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageUtil.init();
+
+  // 全局注入 UserController
+  Get.put(UserController(), permanent: true);
+
   runApp(const MainApp());
 }
 
@@ -9,12 +20,16 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return GetMaterialApp(
+      title: 'CityTrace',
+      debugShowCheckedModeBanner: false,
+      // 默认主题配置
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
+      initialRoute: AppPages.INITIAL,
+      getPages: AppPages.routes,
     );
   }
 }
