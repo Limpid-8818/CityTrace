@@ -1,3 +1,5 @@
+import 'package:citytrace/components/map_view.dart';
+import 'package:citytrace/controllers/map_trace_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -24,8 +26,9 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. 顶部 Header
+              const SizedBox(height: 12),
               _buildTopBar(controller, userController),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
               // 2. 欢迎语
               Obx(
@@ -96,7 +99,16 @@ class HomePage extends StatelessWidget {
       // 7. 悬浮启动按钮 (FAB)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.large(
-        onPressed: () => controller.startJourney(),
+        heroTag: "journey_fab",
+        onPressed: () {
+          if (controller.canStartJourney()) {
+            controller.startMapLoadingTimer();
+            Get.bottomSheet(
+              _buildConfirmBottomSheet(context),
+              isScrollControlled: true,
+            );
+          }
+        },
         backgroundColor: const Color(0xFF009688),
         shape: const CircleBorder(),
         child: const Icon(
@@ -363,6 +375,85 @@ class HomePage extends StatelessWidget {
             trip['date']!,
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmBottomSheet(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    final mapController = Get.find<MapTraceController>();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // 弹窗高度自适应
+        children: [
+          const Text(
+            "准备好出发了吗？",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+
+          // 弹窗内的地图预览区
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Obx(() {
+                if (!controller.isMapReadyInSheet.value ||
+                    mapController.currentPos.value == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  );
+                }
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: MapView(center: mapController.currentPos.value),
+                );
+              }),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 立即出发按钮
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                mapController.startJourney(); // 启动录制逻辑
+                Get.back(); // 关闭弹窗
+                Get.toNamed('/journey'); // 跳转业务页面
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF009688),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                "立即出发",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );

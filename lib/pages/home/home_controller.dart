@@ -25,14 +25,26 @@ class HomeController extends GetxController {
     },
   ].obs;
 
+  final RxBool isMapReadyInSheet = false.obs;
+
+  /// 当弹窗打开时，由 View 调用此方法开启倒计时
+  void startMapLoadingTimer() {
+    isMapReadyInSheet.value = false; // 重置
+    Future.delayed(const Duration(milliseconds: 450), () {
+      print("ready to show map");
+      isMapReadyInSheet.value = true;
+    });
+  }
+
   /// 开始行程按钮的逻辑
-  void startJourney() {
+  bool canStartJourney() {
     if (!userController.isLoggedIn) {
       // 未登录，拦截并跳转
       Get.toNamed('/login');
+      return false;
     } else {
       // 已登录，执行开始行程逻辑
-      print("🚀 开始新的行程...");
+      return true;
     }
   }
 
