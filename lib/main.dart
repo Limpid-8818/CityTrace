@@ -1,3 +1,4 @@
+import 'package:citytrace/controllers/map_trace_controller.dart';
 import 'package:citytrace/core/utils/storage_util.dart';
 import 'package:get/get.dart';
 
@@ -9,8 +10,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageUtil.init();
 
-  // 全局注入 UserController
+  // 全局注入 UserController 和 MapTraceController
   Get.put(UserController(), permanent: true);
+  Get.put(MapTraceController(), permanent: true);
 
   runApp(const MainApp());
 }
