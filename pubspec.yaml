@@ -28,6 +28,17 @@ dependencies:
   # Toast 弹窗
   fluttertoast: ^9.0.0
 
+  # 快速操作菜单
+  flutter_speed_dial: ^7.0.0
+
+  # 权限请求
+  permission_handler: ^11.0.0
+
+  # 地图与定位
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  geolocator: ^14.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
