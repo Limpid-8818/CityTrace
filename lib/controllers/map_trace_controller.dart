@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:citytrace/core/utils/location_util.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+
+import '../core/utils/location_util.dart';
 
 class MapTraceController extends GetxController {
   // 响应式数据
@@ -21,6 +22,8 @@ class MapTraceController extends GetxController {
 
   /// 开启持续定位监听
   void _startLocationListening() async {
+    if (_positionStream != null) return;
+
     bool hasPermission = await LocationUtil.checkPermission();
     if (!hasPermission) return;
 
