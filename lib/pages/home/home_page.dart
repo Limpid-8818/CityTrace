@@ -70,7 +70,7 @@ class HomePage extends StatelessWidget {
                 _buildDrawerItem(
                   Icons.location_on_outlined,
                   "全部行程",
-                  () => controller.handleMenuClick('/journeys'),
+                  () => controller.handleMenuClick('/list'),
                 ),
                 _buildDrawerItem(
                   Icons.calendar_today_outlined,

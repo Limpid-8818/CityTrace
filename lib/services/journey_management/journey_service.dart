@@ -48,11 +48,12 @@ class JourneyService {
   Future<List<JourneyModel>> getJourneyList({
     int page = 1,
     int size = 10,
+    String folderId = "",
   }) async {
     try {
       final response = await _apiClient.get(
         '/journey/list',
-        queryParameters: {'page': page, 'size': size},
+        queryParameters: {'page': page, 'size': size, 'folderId': folderId},
       );
       final List listData = response.data['data']['list'];
       return listData.map((item) => JourneyModel.fromJson(item)).toList();

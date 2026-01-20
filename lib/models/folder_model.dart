@@ -5,14 +5,14 @@ part 'folder_model.g.dart';
 @JsonSerializable()
 class FolderModel {
   final String folderId;
-  final String title;
+  final String name;
   final String? description;
   final String? createTime;
-  final int? journeyCount; // 用于列表简略显示
+  final String? journeyCount; // 用于列表简略显示
 
   FolderModel({
     required this.folderId,
-    required this.title,
+    required this.name,
     this.description,
     this.createTime,
     this.journeyCount,

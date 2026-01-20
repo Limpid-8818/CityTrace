@@ -1,3 +1,4 @@
+import 'package:citytrace/pages/journey/list_page.dart';
 import 'package:get/get.dart';
 
 import '../../pages/auth/login_page.dart';
@@ -14,5 +15,6 @@ class AppPages {
     GetPage(name: '/login', page: () => const LoginPage()),
     GetPage(name: '/journey', page: () => const JourneyDetailPage()),
     GetPage(name: '/note', page: () => const NotePage()),
+    GetPage(name: '/list', page: () => const ListPage()),
   ];
 }

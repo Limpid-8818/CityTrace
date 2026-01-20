@@ -8,16 +8,16 @@ part of 'folder_model.dart';
 
 FolderModel _$FolderModelFromJson(Map<String, dynamic> json) => FolderModel(
   folderId: json['folderId'] as String,
-  title: json['title'] as String,
+  name: json['name'] as String,
   description: json['description'] as String?,
   createTime: json['createTime'] as String?,
-  journeyCount: (json['journeyCount'] as num?)?.toInt(),
+  journeyCount: json['journeyCount'] as String?,
 );
 
 Map<String, dynamic> _$FolderModelToJson(FolderModel instance) =>
     <String, dynamic>{
       'folderId': instance.folderId,
-      'title': instance.title,
+      'name': instance.name,
       'description': instance.description,
       'createTime': instance.createTime,
       'journeyCount': instance.journeyCount,
