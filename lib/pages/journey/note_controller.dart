@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
 import '../../services/ai_service.dart';
 
 class NoteController extends GetxController {
@@ -9,10 +12,16 @@ class NoteController extends GetxController {
 
   // --- 响应式变量 ---
   final RxString selectedStyle = "moments".obs; // 默认：朋友圈风格
+  final RxString customPrompt = "".obs;
   final RxString generatedTitle = "".obs;
   final RxString generatedBody = "".obs;
   final RxList<String> hashtags = <String>[].obs;
   final RxBool isGenerating = false.obs;
+  final RxBool isEditing = false.obs; // 是否处于编辑模式
+
+  // 用于编辑的 TextEditingController
+  late TextEditingController titleEditController;
+  late TextEditingController bodyEditController;
 
   // 预设风格选项 (对应 API 文档)
   final List<Map<String, String>> styleOptions = [
@@ -26,17 +35,32 @@ class NoteController extends GetxController {
   void onInit() {
     super.onInit();
     journeyId = Get.arguments ?? "";
+    titleEditController = TextEditingController();
+    bodyEditController = TextEditingController();
+  }
+
+  @override
+  void onClose() {
+    titleEditController.dispose();
+    bodyEditController.dispose();
+    super.onClose();
   }
 
   /// 执行生成逻辑
   Future<void> startGenerating() async {
     if (journeyId.isEmpty) return;
 
+    if (selectedStyle.value == "custom" && customPrompt.value.trim().isEmpty) {
+      Get.snackbar("提示", "请输入您想要的风格描述");
+      return;
+    }
+
     isGenerating.value = true;
 
     final result = await _aiService.generateNote(
       journeyId: journeyId,
       style: selectedStyle.value,
+      prompt: selectedStyle.value == "custom" ? customPrompt.value : null,
     );
 
     if (result != null) {
@@ -48,5 +72,36 @@ class NoteController extends GetxController {
     }
 
     isGenerating.value = false;
+  }
+
+  /// 进入编辑模式
+  void enterEditMode() {
+    titleEditController.text = generatedTitle.value;
+    bodyEditController.text = generatedBody.value;
+    isEditing.value = true;
+  }
+
+  void saveEdits() {
+    generatedTitle.value = titleEditController.text;
+    generatedBody.value = bodyEditController.text;
+    isEditing.value = false;
+  }
+
+  /// 分享逻辑：复制到剪贴板
+  void shareToClipboard() {
+    String shareText =
+        "${generatedTitle.value}\n\n"
+        "${generatedBody.value}\n\n"
+        "${hashtags.map((e) => "#$e").join(" ")}";
+
+    Clipboard.setData(ClipboardData(text: shareText)).then((_) {
+      Get.snackbar(
+        "已复制",
+        "文案已复制到剪贴板，去社交平台分享吧！",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+      );
+    });
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'note_controller.dart';
 
 class NotePage extends StatelessWidget {
@@ -33,6 +34,50 @@ class NotePage extends StatelessWidget {
 
             // 风格选择网格
             _buildStyleGrid(controller),
+
+            // 自定义提示词输入框
+            Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: controller.selectedStyle.value == "custom"
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: TextField(
+                          onChanged: (value) =>
+                              controller.customPrompt.value = value,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: "在这里输入您的风格需求吧...",
+                            hintStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF009688),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
 
             const SizedBox(height: 32),
 
@@ -164,59 +209,98 @@ class NotePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                controller.generatedTitle.value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Divider(height: 32),
-              Text(
-                controller.generatedBody.value,
-                style: const TextStyle(fontSize: 15, height: 1.6),
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                children: controller.hashtags
-                    .map(
-                      (t) => Text(
-                        "#$t",
-                        style: const TextStyle(color: Color(0xFF009688)),
+          child: Obx(
+            () => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 标题部分
+                controller.isEditing.value
+                    ? TextField(
+                        controller: controller.titleEditController,
+                        maxLines: null,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "输入标题",
+                        ),
+                      )
+                    : Text(
+                        controller.generatedTitle.value,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    )
-                    .toList(),
-              ),
-            ],
+                const Divider(height: 32),
+                // 正文部分
+                controller.isEditing.value
+                    ? TextField(
+                        controller: controller.bodyEditController,
+                        maxLines: null,
+                        style: const TextStyle(fontSize: 15, height: 1.6),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "输入内容",
+                        ),
+                      )
+                    : Text(
+                        controller.generatedBody.value,
+                        style: const TextStyle(fontSize: 15, height: 1.6),
+                      ),
+                const SizedBox(height: 20),
+                // 标签部分
+                Wrap(
+                  spacing: 8,
+                  children: controller.hashtags
+                      .map(
+                        (t) => Text(
+                          "#$t",
+                          style: const TextStyle(color: Color(0xFF009688)),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text("手动修改"),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF009688),
-                ),
-                child: const Text(
-                  "分享足迹",
-                  style: TextStyle(color: Colors.white),
+        Obx(
+          () => Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    if (controller.isEditing.value) {
+                      controller.saveEdits();
+                    } else {
+                      controller.enterEditMode();
+                    }
+                  },
+                  child: Text(
+                    controller.isEditing.value ? "保存修改" : "手动修改",
+                    style: TextStyle(color: const Color(0xFF009688)),
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => controller.shareToClipboard(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF009688),
+                  ),
+                  child: const Text(
+                    "分享足迹",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
