@@ -13,7 +13,10 @@ class NotePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("AI 寻迹成书", style: TextStyle(color: Colors.black87)),
+        title: const Text(
+          "AI 寻迹成书",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(

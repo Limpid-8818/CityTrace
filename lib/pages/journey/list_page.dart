@@ -15,11 +15,10 @@ class ListPage extends GetView<ListController> {
       appBar: AppBar(
         title: const Text(
           "我的行程",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
       ),
       body: Column(
         children: [

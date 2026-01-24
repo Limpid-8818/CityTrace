@@ -48,7 +48,8 @@ class ListController extends GetxController {
       size: 20,
       folderId: filterId,
     );
-    journeys.assignAll(list);
+    final completedList = list.where((e) => e.status != "ongoing").toList();
+    journeys.assignAll(completedList);
   }
 
   /// 切换文件夹逻辑
