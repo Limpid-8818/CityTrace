@@ -185,4 +185,29 @@ class JourneyDetailController extends GetxController {
       currentAddress.value = "未知地点";
     }
   }
+
+  /// 获取显示时长
+  String get displayDuration {
+    if (journey.value == null) return "00:00:00";
+
+    // 如果行程已结束，计算固定的时间差
+    if (isEnded) {
+      DateTime start = DateTime.parse(journey.value!.startTime);
+      DateTime end = DateTime.parse(journey.value!.endTime!);
+      Duration diff = end.difference(start);
+      return _formatDuration(diff);
+    }
+
+    // 如果行程进行中，使用计时器的值
+    return _mapController.durationStr.value;
+  }
+
+  /// 格式化 Duration
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String hours = twoDigits(d.inHours);
+    String minutes = twoDigits(d.inMinutes.remainder(60));
+    String seconds = twoDigits(d.inSeconds.remainder(60));
+    return "$hours:$minutes:$seconds";
+  }
 }

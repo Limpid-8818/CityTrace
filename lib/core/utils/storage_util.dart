@@ -35,6 +35,14 @@ class StorageUtil {
       _prefs.setString(_keyAvatar, value);
   static String? getAvatar() => _prefs.getString(_keyAvatar);
 
+  // 行程 相关
+  static const String _keyJourneyId = "journeyId";
+
+  static Future<bool> setJourneyId(String value) =>
+      _prefs.setString(_keyJourneyId, value);
+  static String? getJourneyId() => _prefs.getString(_keyJourneyId);
+  static Future<bool> removeJourneyId() => _prefs.remove(_keyJourneyId);
+
   // 退出登录清理缓存
   static Future<void> clearAll() async {
     await _prefs.clear();

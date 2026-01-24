@@ -42,6 +42,7 @@ dependencies:
   # 多媒体文件处理
   image_picker: ^1.2.1
   record: ^6.1.2
+  audioplayers: ^6.5.1
 
   # 文件路径获取
   path_provider: ^2.1.5

@@ -13,6 +13,7 @@ class UserController extends GetxController {
   // 获取器
   UserModel? get user => _user.value;
   bool get isLoggedIn => _isLoggedIn.value;
+  RxBool get isLoggedInRx => _isLoggedIn;
 
   @override
   void onInit() {

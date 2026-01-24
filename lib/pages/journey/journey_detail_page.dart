@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -42,13 +45,61 @@ class JourneyDetailPage extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 240,
       pinned: true,
+      iconTheme: const IconThemeData(color: Colors.white),
+      actionsIconTheme: const IconThemeData(color: Colors.white),
       backgroundColor: const Color(0xFF009688),
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(controller.journey.value?.title ?? "行程详情"),
-        background: Image.network(
-          controller.journey.value?.cover ?? "",
-          fit: BoxFit.cover,
-          errorBuilder: (c, e, s) => Container(color: const Color(0xFF80CBC4)),
+        title: Obx(
+          () => Text(
+            controller.journey.value?.title ?? "行程详情",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              // 添加微弱阴影增强在浅色背景图上的辨识度
+              shadows: [
+                Shadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+          ),
+        ),
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(bottom: 16),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Hero(
+              tag: "journey_cover_${controller.journeyId}", // 与入口 tag 保持一致
+              child: Obx(
+                () => Image.network(
+                  controller.journey.value?.cover ?? "",
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) =>
+                      Container(color: const Color(0xFF80CBC4)),
+                ),
+              ),
+            ),
+            // 添加阴影让顶部的返回键和底部的标题在任何底图下都清晰
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black38, // 顶部暗色，保护返回键
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black45, // 底部暗色，保护标题
+                  ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
@@ -62,34 +113,83 @@ class JourneyDetailPage extends StatelessWidget {
   }
 
   Widget _buildSummaryCard() {
+    JourneyDetailController controller = Get.find<JourneyDetailController>();
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5), // 浅灰色背景，区分开来
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        // 使用更柔和的阴影，让卡片有浮起感
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // 路径缩略图
           Container(
-            width: 70,
-            height: 70,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF009688).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.map_outlined, color: Color(0xFF009688)),
-          ),
-          const SizedBox(width: 16),
-          // 统计数据
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                _buildStatItem("2.5h", "时长"),
-                _buildStatItem("4.2km", "里程"),
-                _buildStatItem("12", "瞬间"),
+                const Icon(
+                  Icons.map_outlined,
+                  color: Color(0xFF009688),
+                  size: 32,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Obx(
+                      () => _buildStatItem(controller.displayDuration, "累计时长"),
+                    ),
+                    const SizedBox(width: 48),
+                    Obx(
+                      () => _buildStatItem(
+                        "${controller.moments.length}",
+                        "捕捉瞬间",
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.push_pin_outlined,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        controller.journey.value?.startTime.split('T')[0] ??
+                            "未知时间",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -100,14 +200,19 @@ class JourneyDetailPage extends StatelessWidget {
 
   Widget _buildStatItem(String value, String label) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+        Row(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace', // 时间保持等宽
+              ),
+            ),
+          ],
         ),
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
@@ -203,117 +308,186 @@ class JourneyDetailPage extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // 高度由内容撑开
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (moment.media != null)
+          // 标题行
+          if (moment.title != null && moment.title!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(moment.media!, fit: BoxFit.fitWidth),
-              ),
-            ),
-          Text(
-            moment.title ?? "",
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          if (moment.context != null)
-            Text(
-              moment.context!,
-              style: const TextStyle(color: Colors.black87, height: 1.5),
-            ),
-          const SizedBox(height: 12),
-          // AI 描述
-          if (moment.mediaDescription != null)
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(10),
-              ),
               child: Text(
-                "✨ AI: ${moment.mediaDescription}",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.teal.shade800,
-                  fontStyle: FontStyle.italic,
+                moment.title!,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
             ),
+
+          // 核心内容区域
+          MomentCard.buildTypedContent(moment),
+
           const SizedBox(height: 12),
-          Text(
-            moment.time,
-            style: const TextStyle(color: Colors.grey, fontSize: 11),
-          ),
+
+          // 标签 + 地点 + 时间
+          _buildMomentFooter(moment),
         ],
       ),
     );
   }
 
-  Widget _buildSpeedDialFab(BuildContext context) {
-    JourneyDetailController controller = Get.find<JourneyDetailController>();
-    return SpeedDial(
-      heroTag: "journey_fab",
-      icon: Icons.add,
-      activeIcon: Icons.close,
-      backgroundColor: const Color(0xFF009688),
-      foregroundColor: Colors.white,
-      visible: true,
-      curve: Curves.bounceIn,
+  Widget _buildMomentFooter(MomentModel moment) {
+    final bool hasTags = moment.tags != null && moment.tags!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SpeedDialChild(
-          child: const Icon(Icons.stop),
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          label: '结束行程',
-          onTap: () => _showEndJourneyConfirm(),
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.mic),
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          label: '录音感悟',
-          onTap: () => MomentBottomSheet.showAudioRecorder(controller),
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.camera_alt),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          label: '拍照记录',
-          onTap: () => MomentBottomSheet.showImagePicker(controller),
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.edit),
-          backgroundColor: Colors.purple,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          label: '手写日志',
-          onTap: () => MomentBottomSheet.showTextEditor(controller),
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.location_on),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          shape: CircleBorder(),
-          label: '添加标记',
-          onTap: () => MomentBottomSheet.showLocationMarker(controller),
+        // 标签行
+        if (hasTags) ...[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: moment.tags!
+                  .map(
+                    (tag) => Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF009688).withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "#$tag",
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF009688),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, thickness: 0.5), // 有标签时，用线分割
+          const SizedBox(height: 10),
+        ] else ...[
+          const SizedBox(height: 16),
+        ],
+
+        // 底部地点+时间
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: moment.type == "location"
+                  ? const SizedBox()
+                  : Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 12,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            moment.location.name ?? "未知地点",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+            Text(
+              moment.time.split('T').last.substring(0, 5),
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade400,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
+  Widget _buildSpeedDialFab(BuildContext context) {
+    JourneyDetailController controller = Get.find<JourneyDetailController>();
+    return Obx(() {
+      if (controller.isEnded) return SizedBox.shrink();
+      return SpeedDial(
+        heroTag: "journey_fab",
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: const Color(0xFF009688),
+        foregroundColor: Colors.white,
+        visible: true,
+        curve: Curves.bounceIn,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.stop),
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            shape: CircleBorder(),
+            label: '结束行程',
+            onTap: () => _showEndJourneyConfirm(),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.mic),
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+            shape: CircleBorder(),
+            label: '录音感悟',
+            onTap: () => MomentBottomSheet.showAudioRecorder(controller),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.camera_alt),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: CircleBorder(),
+            label: '拍照记录',
+            onTap: () => MomentBottomSheet.showImagePicker(controller),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.edit),
+            backgroundColor: Colors.purple,
+            foregroundColor: Colors.white,
+            shape: CircleBorder(),
+            label: '手写日志',
+            onTap: () => MomentBottomSheet.showTextEditor(controller),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.location_on),
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            shape: CircleBorder(),
+            label: '添加标记',
+            onTap: () => MomentBottomSheet.showLocationMarker(controller),
+          ),
+        ],
+      );
+    });
+  }
+
   void _showEndJourneyConfirm() {
+    JourneyDetailController controller = Get.find<JourneyDetailController>();
     Get.defaultDialog(
       title: "提示",
       middleText: "确定要结束本次城市寻迹吗？",
@@ -322,6 +496,7 @@ class JourneyDetailPage extends StatelessWidget {
       confirmTextColor: Colors.white,
       buttonColor: const Color(0xFF009688),
       onConfirm: () {
+        controller.onEndJourney();
         Get.back(); // 关弹窗
       },
     );

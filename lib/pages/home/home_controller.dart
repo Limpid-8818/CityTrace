@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../controllers/user_controller.dart';
 import '../../controllers/map_trace_controller.dart';
+import '../../core/utils/storage_util.dart';
 import '../../services/journey_management/journey_service.dart';
 import '../../services/context_service.dart';
 import '../../models/user_model.dart';
@@ -22,6 +23,7 @@ class HomeController extends GetxController {
   final RxBool isMapReadyInSheet = false.obs;
   final RxString locationDisplay = "定位中...".obs; // 显示格式：上海市·黄浦区
   final RxString weatherDisplay = "--°C".obs; // 显示格式：多云 · 22°C
+  final RxBool isLoadingRecent = false.obs;
 
   // 记录变量控制请求频率
   LatLng? _lastFetchPos;
@@ -31,40 +33,93 @@ class HomeController extends GetxController {
   UserModel? get currentUser => _userController.user;
   bool get isLoggedIn => _userController.isLoggedIn;
   LatLng? get currentPos => _mapController.currentPos.value;
+  bool get isInJourney => _mapController.isInJourney.value;
+  String? get currentJourneyId => _mapController.currentJourneyId.value;
+  String? get duration => _mapController.durationStr.value;
 
   // 页面初始化
   /// 加载最近行程并开启位置监听
   @override
   void onInit() {
     super.onInit();
+    _loadOngoingJourney();
     _loadRecentTrips();
+    if (currentPos != null) {
+      _handlePositionChange(currentPos!);
+    }
     // 监听位置变化
     ever(_mapController.currentPos, (LatLng? pos) {
       if (pos != null) _handlePositionChange(pos);
+    });
+    // 监听登录状态变化
+    ever(_userController.isLoggedInRx, (_) => _loadRecentTrips());
+    // 监听行程状态变化
+    ever(_mapController.isInJourney, (bool isInJourney) {
+      if (!isInJourney && isLoggedIn) {
+        // 行程结束且已登录，刷新最近行程列表
+        _loadRecentTrips();
+      }
     });
   }
 
   // 逻辑处理
 
-  void _loadRecentTrips() {
-    // 这里的 Mock 数据未来可以替换为 _journeyService.getJourneyList()
-    recentTrips.assignAll([
-      {
-        "title": "北京",
-        "date": "2021年1月2日",
-        "img": "https://picsum.photos/200/300?random=1",
-      },
-      {
-        "title": "重庆旅行",
-        "date": "2022年1月1日",
-        "img": "https://picsum.photos/200/300?random=2",
-      },
-      {
-        "title": "大连",
-        "date": "2023年",
-        "img": "https://picsum.photos/200/300?random=3",
-      },
-    ]);
+  void _loadOngoingJourney() async {
+    String? cachedId = StorageUtil.getJourneyId();
+
+    if (cachedId == null || cachedId.isEmpty) return;
+
+    try {
+      // 向后端请求该行程的详情，验证是否真的“正在进行”
+      final journeyDetail = await _journeyService.getJourneyDetail(cachedId);
+
+      if (journeyDetail != null && journeyDetail.status == "ongoing") {
+        // 如果后端确认状态依然是进行中，则同步修改全局控制器的状态
+        // 传递后端返回的开始时间，以便恢复准确的计时器
+        DateTime? startTime = DateTime.tryParse(journeyDetail.startTime);
+        _mapController.startJourney(cachedId, time: startTime);
+      } else {
+        // 如果后端显示已结束或数据异常，则清除本地失效的缓存
+        StorageUtil.removeJourneyId();
+        _mapController.stopJourney(); // 确保 UI 回到初始态
+      }
+    } catch (e) {
+      debugPrint("恢复行程状态失败: $e");
+    }
+  }
+
+  void _loadRecentTrips() async {
+    if (!isLoggedIn) {
+      recentTrips.clear();
+      return;
+    }
+
+    isLoadingRecent.value = true;
+
+    try {
+      final list = await _journeyService.getJourneyList(page: 1, size: 6);
+      if (list.isNotEmpty) {
+        final completedList = list.where((e) => e.status != "ongoing").toList();
+        recentTrips.assignAll(
+          completedList
+              .map(
+                (e) => {
+                  "id": e.journeyId,
+                  "title": e.title,
+                  "date": e.startTime.split('T')[0],
+                  "img": e.cover,
+                },
+              )
+              .toList(),
+        );
+      } else {
+        recentTrips.clear();
+      }
+    } catch (e) {
+      recentTrips.clear();
+    } finally {
+      isLoadingRecent.value = false;
+    }
   }
 
   /// 开始行程
@@ -77,11 +132,19 @@ class HomeController extends GetxController {
 
     if (newJourney != null) {
       // 启动轨迹录制
-      _mapController.startJourney();
+      _mapController.startJourney(
+        newJourney.journeyId,
+        time: DateTime.tryParse(newJourney.startTime),
+      );
       // UI 反馈
       Get.back(); // 关闭底栏
       Get.toNamed('/journey', arguments: newJourney.journeyId);
     }
+  }
+
+  /// 回到行程页
+  void handleJourneyCardClick() {
+    Get.toNamed('/journey', arguments: currentJourneyId);
   }
 
   /// 头像点击

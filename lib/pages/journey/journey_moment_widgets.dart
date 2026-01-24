@@ -446,3 +446,328 @@ class MomentBottomSheet {
     );
   }
 }
+
+class MomentCard {
+  static Widget buildTypedContent(MomentModel moment) {
+    switch (moment.type) {
+      case "image":
+        return _buildImageContent(moment);
+      case "audio":
+        return _buildAudioContent(moment);
+      case "text":
+        return _buildTextContent(moment);
+      case "location":
+        return _buildLocationContent(moment);
+      default:
+        return const SizedBox();
+    }
+  }
+
+  static Widget _buildImageContent(MomentModel moment) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            moment.media!,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder: (c, e, s) => Container(
+              height: 150,
+              color: Colors.grey.shade100,
+              child: const Icon(
+                Icons.broken_image_outlined,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ),
+        if (moment.mediaDescription != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF009688).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF009688).withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("✨", style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    moment.mediaDescription!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.teal.shade800,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  static Widget _buildAudioContent(MomentModel moment) {
+    if (moment.media == null || moment.media!.isEmpty) {
+      return const Text("音频加载失败", style: TextStyle(color: Colors.grey));
+    }
+
+    // 使用播放器组件
+    return AudioMomentPlayer(url: moment.media!);
+  }
+
+  static Widget _buildTextContent(MomentModel moment) {
+    return Text(
+      moment.context ?? "",
+      style: const TextStyle(
+        fontSize: 15,
+        height: 1.6,
+        color: Colors.black87,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
+
+  static Widget _buildLocationContent(MomentModel moment) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.location_on, color: Colors.blue, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                moment.location.name ?? "未知地点",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "${moment.location.lat}, ${moment.location.lon}",
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class AudioMomentPlayer extends StatefulWidget {
+  final String url;
+  const AudioMomentPlayer({super.key, required this.url});
+
+  @override
+  State<AudioMomentPlayer> createState() => _AudioMomentPlayerState();
+}
+
+class _AudioMomentPlayerState extends State<AudioMomentPlayer> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  bool _isLoading = false;
+  bool _hasError = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+
+    // 监听播放状态
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() => _isPlaying = state == PlayerState.playing);
+      }
+    });
+
+    // 监听总时长
+    _audioPlayer.onDurationChanged.listen((newDuration) {
+      if (mounted) {
+        setState(() {
+          _duration = newDuration;
+          print("Now Duration:$_duration");
+        });
+      }
+    });
+
+    // 监听当前进度
+    _audioPlayer.onPositionChanged.listen((newPosition) {
+      if (mounted) setState(() => _position = newPosition);
+    });
+
+    // 监听错误事件
+    _audioPlayer.onLog.listen((msg) {
+      if (msg.contains("error")) {
+        _handleError();
+      }
+    });
+  }
+
+  void _handleError() {
+    if (mounted) {
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+        _isPlaying = false;
+      });
+      Get.snackbar(
+        "播放失败",
+        "无法加载音频资源",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose(); // 释放资源
+    super.dispose();
+  }
+
+  void _togglePlay() async {
+    if (_hasError) {
+      // 如果之前报错了，点击时重置状态尝试重新加载
+      setState(() => _hasError = false);
+      setState(() => _isPlaying = false);
+    }
+
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        setState(() => _isLoading = true); // 开始加载
+        // play 方法可能会抛出异常
+        await _audioPlayer
+            .play(UrlSource(widget.url))
+            .timeout(
+              const Duration(seconds: 10), // 10秒超时
+              onTimeout: () => throw TimeoutException("连接超时"),
+            );
+        setState(() => _isLoading = false); // 加载完成
+      }
+    } catch (e) {
+      _handleError();
+      debugPrint("音频播放出错: $e");
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    return "${twoDigits(duration.inMinutes.remainder(60))}:${twoDigits(duration.inSeconds.remainder(60))}";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 根据状态决定图标
+    Widget playIcon;
+    if (_hasError) {
+      playIcon = const Icon(Icons.error_outline, color: Colors.red, size: 32);
+    } else if (_isLoading) {
+      playIcon = const SizedBox(
+        width: 32,
+        height: 32,
+        child: Padding(
+          padding: EdgeInsets.all(4.0),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.orange,
+          ),
+        ),
+      );
+    } else {
+      playIcon = Icon(
+        _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+        color: Colors.orange,
+        size: 32,
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: _hasError ? Colors.red.shade50 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(onTap: _togglePlay, child: playIcon),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _hasError ? "资源加载失败" : "录音",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _hasError ? Colors.red : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // 动态波形图
+                Row(
+                  children: List.generate(15, (index) {
+                    // 如果正在播放，让波形随机跳动，否则保持静止
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 2),
+                      width: 3,
+                      height: _isPlaying
+                          ? (index % 3 + 2) * (index.isEven ? 2.0 : 4.0)
+                          : (index % 3 + 2) * 3.0,
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(
+                          _isPlaying ? 0.8 : 0.4,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            _hasError
+                ? "--:--"
+                : _isPlaying
+                ? _formatDuration(_position)
+                : (_duration == Duration.zero
+                      ? "00:00"
+                      : _formatDuration(_duration)),
+            style: TextStyle(
+              fontSize: 12,
+              color: _hasError ? Colors.grey : Colors.orange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

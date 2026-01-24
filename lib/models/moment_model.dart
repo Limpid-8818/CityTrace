@@ -23,8 +23,8 @@ class MomentModel {
     this.title,
     required this.location,
     this.context,
-    this.media,
-    this.mediaDescription,
+    this.media, // url 地址
+    this.mediaDescription, // AI 生成描述
     this.tags,
   });
 
