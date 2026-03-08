@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../controllers/user_controller.dart';
 import '../../services/journey_management/journey_service.dart';
 import '../../models/user_model.dart';
+import '../../core/utils/storage_util.dart';
 
 class ProfileController extends GetxController {
   final UserController _userController = Get.find<UserController>();
@@ -65,4 +66,32 @@ class ProfileController extends GetxController {
 
   /// 退出登录
   void logout() => _userController.logout();
+
+  /// 更新用户名
+  Future<void> updateUsername(String newUsername) async {
+    if (currentUser == null) return;
+
+    try {
+      // 这里应该调用后端API更新用户名
+      // 暂时模拟更新过程
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 更新本地用户信息
+      final updatedUser = UserModel(
+        userId: currentUser!.userId,
+        account: currentUser!.account,
+        username: newUsername,
+        avatar: currentUser!.avatar,
+      );
+
+      // 更新全局用户状态
+      _userController.onLoginSuccess(updatedUser);
+
+      // 更新本地存储
+      StorageUtil.setUsername(newUsername);
+    } catch (e) {
+      print("更新用户名失败: $e");
+      rethrow;
+    }
+  }
 }

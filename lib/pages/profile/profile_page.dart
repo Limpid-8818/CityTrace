@@ -99,22 +99,45 @@ class ProfilePage extends StatelessWidget {
                   ),
                   // 用户昵称在右下角
                   Positioned(
-                    bottom: 20,
+                    bottom: 10,
                     right: 24,
-                    child: Text(
-                      user?.username ?? "探索者",
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 8,
-                            color: Colors.black26,
-                            offset: Offset(1, 1),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          user?.username ?? "探索者",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 8,
+                                color: Colors.black26,
+                                offset: Offset(1, 1),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        // 修改个人信息按钮
+                        GestureDetector(
+                          onTap: () {
+                            _showEditProfileDialog();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              "修改个人信息",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.8),
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white.withOpacity(0.6),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -125,8 +148,8 @@ class ProfilePage extends StatelessWidget {
               top: 140, // 头像底部与背景底部对齐
               left: 24,
               child: Container(
-                width: 100,
-                height: 100,
+                width: 110,
+                height: 110,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -414,6 +437,72 @@ class ProfilePage extends StatelessWidget {
         // 下分割线
         Container(height: 1, color: Colors.grey.shade200),
       ],
+    );
+  }
+
+  /// 显示修改个人信息对话框
+  void _showEditProfileDialog() {
+    final controller = Get.find<ProfileController>();
+    final user = controller.currentUser;
+    final TextEditingController usernameController = TextEditingController(
+      text: user?.username ?? '',
+    );
+
+    Get.defaultDialog(
+      title: "修改个人信息",
+      content: Column(
+        children: [
+          const SizedBox(height: 16),
+          TextField(
+            controller: usernameController,
+            decoration: const InputDecoration(
+              labelText: "昵称",
+              border: OutlineInputBorder(),
+              hintText: "请输入新的昵称",
+            ),
+            maxLength: 20,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade300,
+                  foregroundColor: Colors.black87,
+                ),
+                child: const Text("取消"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final newUsername = usernameController.text.trim();
+                  if (newUsername.isEmpty) {
+                    Get.snackbar("提示", "昵称不能为空");
+                    return;
+                  }
+                  if (newUsername.length > 20) {
+                    Get.snackbar("提示", "昵称不能超过20个字符");
+                    return;
+                  }
+
+                  // 调用控制器更新昵称
+                  controller.updateUsername(newUsername);
+                  Get.back();
+                  Get.snackbar("成功", "昵称修改成功");
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00695C),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text("保存"),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
