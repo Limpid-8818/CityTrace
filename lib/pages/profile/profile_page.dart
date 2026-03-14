@@ -147,28 +147,57 @@ class ProfilePage extends StatelessWidget {
             Positioned(
               top: 140, // 头像底部与背景底部对齐
               left: 24,
-              child: Container(
-                width: 110,
-                height: 110,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 44,
-                  backgroundColor: Colors.white,
-                  backgroundImage: NetworkImage(
-                    user?.avatar ??
-                        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+              child: GestureDetector(
+                onTap: () {
+                  final controller = Get.find<ProfileController>();
+                  controller.updateAvatar();
+                },
+                child: Container(
+                  width: 95,
+                  height: 95,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 44,
+                        backgroundColor: Colors.white,
+                        backgroundImage: NetworkImage(
+                          user?.avatar ??
+                              "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+                        ),
+                      ),
+                      // 头像编辑图标
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF009688),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

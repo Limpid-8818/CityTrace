@@ -64,15 +64,16 @@ class UserController extends GetxController {
     StorageUtil.setUserId(user.userId);
     StorageUtil.setUsername(user.username);
     if (user.avatar != null) StorageUtil.setAvatar(user.avatar!);
-    
-    // 检查是否有目标路由，如果有则跳转到目标路由，否则跳转到主页
-    final targetRoute = StorageUtil.getTargetRoute();
-    if (targetRoute != null && targetRoute.isNotEmpty) {
-      StorageUtil.removeTargetRoute(); // 清除目标路由
-      Get.offAllNamed(targetRoute);
-    } else {
-      Get.offAllNamed('/home');
-    }
+    // 登录成功后跳转到主页
+    Get.offAllNamed('/home');
+  }
+
+  /// 更新用户信息（不触发导航）
+  void updateUserInfo(UserModel user) {
+    _user.value = user;
+    StorageUtil.setUserId(user.userId);
+    StorageUtil.setUsername(user.username);
+    if (user.avatar != null) StorageUtil.setAvatar(user.avatar!);
   }
 
   /// 统一的注销/过期跳转逻辑

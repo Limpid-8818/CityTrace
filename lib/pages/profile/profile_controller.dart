@@ -1,12 +1,17 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../controllers/user_controller.dart';
 import '../../services/journey_management/journey_service.dart';
 import '../../models/user_model.dart';
 import '../../core/utils/storage_util.dart';
+import '../../services/auth_service.dart';
 
 class ProfileController extends GetxController {
   final UserController _userController = Get.find<UserController>();
   final JourneyService _journeyService = JourneyService();
+  final AuthService _authService = AuthService();
 
   // 对外提供用户信息
   UserModel? get currentUser => _userController.user;
@@ -84,14 +89,114 @@ class ProfileController extends GetxController {
         avatar: currentUser!.avatar,
       );
 
-      // 更新全局用户状态
-      _userController.onLoginSuccess(updatedUser);
+      // 更新全局用户状态（不触发导航）
+      _userController.updateUserInfo(updatedUser);
 
       // 更新本地存储
       StorageUtil.setUsername(newUsername);
     } catch (e) {
       print("更新用户名失败: $e");
       rethrow;
+    }
+  }
+
+  /// 选择并更新头像
+  Future<void> updateAvatar() async {
+    if (currentUser == null) return;
+
+    try {
+      // 显示选择方式对话框
+      final ImagePicker picker = ImagePicker();
+
+      // 选择图片来源
+      final XFile? image = await Get.dialog<XFile?>(
+        Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "选择头像来源",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final XFile? photo = await picker.pickImage(
+                      source: ImageSource.camera,
+                      maxWidth: 800,
+                      maxHeight: 800,
+                      imageQuality: 80,
+                    );
+                    Get.back(result: photo);
+                  },
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text("拍照"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF009688),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final XFile? image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      maxWidth: 800,
+                      maxHeight: 800,
+                      imageQuality: 80,
+                    );
+                    Get.back(result: image);
+                  },
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text("从相册选择"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF009688),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text("取消"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      if (image != null) {
+        // 上传头像到服务器
+        final File imageFile = File(image.path);
+        final String? avatarUrl = await _authService.uploadAvatar(imageFile);
+
+        if (avatarUrl != null) {
+          // 更新本地用户信息
+          final updatedUser = UserModel(
+            userId: currentUser!.userId,
+            account: currentUser!.account,
+            username: currentUser!.username,
+            avatar: avatarUrl,
+          );
+
+          // 更新全局用户状态（不触发导航）
+          _userController.updateUserInfo(updatedUser);
+
+          // 更新本地存储
+          StorageUtil.setAvatar(avatarUrl);
+
+          Get.snackbar("成功", "头像更新成功");
+        } else {
+          Get.snackbar("错误", "头像上传失败，请重试");
+        }
+      }
+    } catch (e) {
+      print("更新头像失败: $e");
+      Get.snackbar("错误", "头像更新失败，请重试");
     }
   }
 }
