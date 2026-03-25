@@ -34,7 +34,7 @@ class AboutView extends StatelessWidget {
             // 1. Logo 区域
             Center(
               child: Image.asset(
-                'assets/images/citytrace app.jpg',
+                'assets/images/citytrace_app_icon.jpg',
                 width: 180,
                 height: 180,
                 fit: BoxFit.contain,
