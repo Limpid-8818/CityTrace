@@ -47,6 +47,9 @@ dependencies:
   # 文件路径获取
   path_provider: ^2.1.5
 
+  # 加密算法
+  crypto: ^3.0.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

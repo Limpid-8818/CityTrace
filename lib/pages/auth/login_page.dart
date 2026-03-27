@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'login_controller.dart';
 
@@ -48,6 +49,7 @@ class LoginPage extends StatelessWidget {
                             controller: controller.usernameController,
                             hint: "用户名",
                             icon: Icons.person_outline,
+                            validator: (value) => controller.validateUsername(),
                           ),
                   ),
                   const SizedBox(height: 16),
@@ -55,6 +57,7 @@ class LoginPage extends StatelessWidget {
                     controller: controller.accountController,
                     hint: "账号 / 手机号",
                     icon: Icons.alternate_email,
+                    validator: (value) => controller.validateAccount(),
                   ),
                   const SizedBox(height: 16),
                   Obx(
@@ -66,6 +69,7 @@ class LoginPage extends StatelessWidget {
                       obscureText: controller.obscureText.value,
                       onSuffixIconPressed: () =>
                           controller.obscureText.toggle(),
+                      validator: (value) => controller.validatePassword(),
                     ),
                   ),
                 ],
@@ -131,10 +135,16 @@ class LoginPage extends StatelessWidget {
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onSuffixIconPressed,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      inputFormatters: isPassword
+          ? [FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_]'))]
+          : null,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.grey),
