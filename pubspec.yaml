@@ -50,6 +50,9 @@ dependencies:
   # 加密算法
   crypto: ^3.0.7
 
+  # 项目元数据
+  package_info_plus: ^9.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

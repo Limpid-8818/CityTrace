@@ -1,4 +1,7 @@
+import 'package:citytrace/core/utils/metadata_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import "package:yaml/yaml.dart";
 import 'package:get/get.dart';
 
 class AboutView extends StatelessWidget {
@@ -102,18 +105,18 @@ class AboutView extends StatelessWidget {
   }
 
   Widget _buildFooterSection() {
-    return const Column(
+    return Column(
       children: [
         Text(
-          "版本号: 1.0.0",
-          style: TextStyle(color: Colors.black45, fontSize: 13),
+          "版本号: ${MetadataUtil.version}",
+          style: const TextStyle(color: Colors.black45, fontSize: 13),
         ),
-        SizedBox(height: 15),
-        Text(
+        const SizedBox(height: 15),
+        const Text(
           "Copyright © TraceMakers 迹录者",
           style: TextStyle(color: Colors.black38, fontSize: 12),
         ),
-        Text(
+        const Text(
           "All Rights Reserved",
           style: TextStyle(color: Colors.black26, fontSize: 11),
         ),

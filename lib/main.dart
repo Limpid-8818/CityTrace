@@ -1,4 +1,5 @@
 import 'package:citytrace/controllers/map_trace_controller.dart';
+import 'package:citytrace/core/utils/metadata_util.dart';
 import 'package:citytrace/core/utils/storage_util.dart';
 import 'package:get/get.dart';
 
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageUtil.init();
+  await MetadataUtil.init();
 
   // 全局注入 UserController 和 MapTraceController
   Get.put(UserController(), permanent: true);
