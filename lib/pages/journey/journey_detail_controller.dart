@@ -11,6 +11,7 @@ import '../../services/journey_management/journey_service.dart';
 import '../../services/journey_management/moment_service.dart';
 import '../../controllers/map_trace_controller.dart';
 import '../../core/utils/media_util.dart';
+import '../home/home_controller.dart';
 
 class JourneyDetailController extends GetxController {
   // 依赖注入
@@ -119,7 +120,7 @@ class JourneyDetailController extends GetxController {
 
   /// 处理位置标记点上传
   Future<void> onUploadLocationMark() async {
-    _processUpload(type: "location");
+    _processUpload(type: "location", title: "打卡记录");
   }
 
   /// 统一瞬间上传方法
@@ -183,6 +184,36 @@ class JourneyDetailController extends GetxController {
           "${geo.city} · ${geo.district} · ${geo.name ?? geo.address ?? ''}";
     } else {
       currentAddress.value = "未知地点";
+    }
+  }
+
+  Future<void> setAsJourneyCover(String imageUrl) async {
+    if (journey.value == null) return;
+
+    // 显示加载中
+    _showLoading();
+
+    try {
+      // 调用更新接口
+      final updatedJourney = await _journeyService.updateJourney(
+        journeyId,
+        cover: imageUrl,
+      );
+
+      Get.back(); // 关闭 Loading
+
+      if (updatedJourney != null) {
+        journey.value = updatedJourney;
+        Get.snackbar("设置成功", "已将此瞬间设为行程封面");
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().loadRecentTrips();
+        }
+      } else {
+        Get.snackbar("设置失败", "请稍后重试");
+      }
+    } catch (e) {
+      Get.back();
+      Get.snackbar("错误", "网络连接异常");
     }
   }
 

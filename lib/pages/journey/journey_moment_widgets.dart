@@ -464,21 +464,26 @@ class MomentCard {
   }
 
   static Widget _buildImageContent(MomentModel moment) {
+    final controller = Get.find<JourneyDetailController>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            moment.media!,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            errorBuilder: (c, e, s) => Container(
-              height: 150,
-              color: Colors.grey.shade100,
-              child: const Icon(
-                Icons.broken_image_outlined,
-                color: Colors.grey,
+        GestureDetector(
+          onLongPress: () => _showImageOptions(controller, moment.media!),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              moment.media!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              errorBuilder: (c, e, s) => Container(
+                height: 150,
+                color: Colors.grey.shade100,
+                child: const Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.grey,
+                ),
               ),
             ),
           ),
@@ -571,6 +576,44 @@ class MomentCard {
           ),
         ),
       ],
+    );
+  }
+
+  static void _showImageOptions(
+    JourneyDetailController controller,
+    String imageUrl,
+  ) {
+    Get.bottomSheet(
+      Container(
+        // 保持与文件夹操作一致的白色背景
+        color: Colors.white,
+        child: Wrap(
+          children: [
+            // 设为封面
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text("设为行程封面"),
+              onTap: () {
+                Get.back();
+                controller.setAsJourneyCover(imageUrl);
+              },
+            ),
+
+            // 保存图片（可选扩展）
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: const Text("保存图片到相册"),
+              onTap: () {
+                Get.back();
+                // 这里可以调用 mediaUtil 保存逻辑
+                Get.snackbar("提示", "正在开发中...");
+              },
+            ),
+
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 }
