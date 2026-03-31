@@ -1,7 +1,5 @@
 import 'package:citytrace/core/utils/metadata_util.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import "package:yaml/yaml.dart";
 import 'package:get/get.dart';
 
 class AboutView extends StatelessWidget {
