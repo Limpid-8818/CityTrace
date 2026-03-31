@@ -76,27 +76,35 @@ class ProfileController extends GetxController {
   Future<void> updateUsername(String newUsername) async {
     if (currentUser == null) return;
 
-    try {
-      // 这里应该调用后端API更新用户名
-      // 暂时模拟更新过程
-      await Future.delayed(const Duration(milliseconds: 500));
+    // 如果名字没变，直接返回
+    if (currentUser!.username == newUsername) return;
 
-      // 更新本地用户信息
+    try {
       final updatedUser = UserModel(
         userId: currentUser!.userId,
         account: currentUser!.account,
-        username: newUsername,
+        username: newUsername, // 设置新用户名
         avatar: currentUser!.avatar,
       );
 
-      // 更新全局用户状态（不触发导航）
-      _userController.updateUserInfo(updatedUser);
+      // 调用API
+      bool success = await _authService.updateProfile(updatedUser);
 
-      // 更新本地存储
-      StorageUtil.setUsername(newUsername);
+      if (success) {
+        // 接口调用成功后，更新全局用户状态
+        _userController.updateUserInfo(updatedUser);
+
+        // 同步更新本地持久化存储
+        StorageUtil.setUsername(newUsername);
+
+        Get.snackbar("成功", "用户名修改成功");
+      } else {
+        Get.snackbar("错误", "修改用户名失败，请稍后重试");
+        throw Exception("服务器返回操作失败");
+      }
     } catch (e) {
       print("更新用户名失败: $e");
-      rethrow;
+      Get.snackbar("错误", "网络异常或系统错误");
     }
   }
 

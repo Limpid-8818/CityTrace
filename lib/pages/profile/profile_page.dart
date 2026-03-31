@@ -520,7 +520,6 @@ class ProfilePage extends StatelessWidget {
                   // 调用控制器更新昵称
                   controller.updateUsername(newUsername);
                   Get.back();
-                  Get.snackbar("成功", "昵称修改成功");
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00695C),
