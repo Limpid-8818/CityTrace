@@ -528,8 +528,47 @@ class MomentCard {
       return const Text("音频加载失败", style: TextStyle(color: Colors.grey));
     }
 
-    // 使用播放器组件
-    return AudioMomentPlayer(url: moment.media!);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 音频播放器组件
+        AudioMomentPlayer(url: moment.media!),
+
+        // ASR 转写文本
+        if (moment.mediaDescription != null &&
+            moment.mediaDescription!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF009688).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF009688).withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("✨", style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    moment.mediaDescription!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.teal.shade800,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
   static Widget _buildTextContent(MomentModel moment) {
