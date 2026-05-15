@@ -263,6 +263,7 @@ class MockData {
       "startTime": DateTime.now().toIso8601String(),
       "endTime": null,
       "folderId": null,
+      "folderIds": [],
       "moments": [],
     };
     _journeyList.insert(0, newJourney);
@@ -301,8 +302,18 @@ class MockData {
 
     var list = _journeyList;
     if (folderId.isNotEmpty) {
-      list = list.where((j) => j['folderId'] == folderId).toList();
+      // 支持通过 folderIds 数组匹配（多文件夹归属）
+      list = list.where((j) {
+        final ids = j['folderIds'] as List<dynamic>? ?? [];
+        if (ids.contains(folderId)) return true;
+        // 向后兼容：也检查旧的 folderId 字段
+        if (j['folderId'] == folderId) return true;
+        return false;
+      }).toList();
     }
+
+    // 只返回已结束的行程（与 controller 逻辑一致）
+    list = list.where((j) => j['status'] != 'ongoing').toList();
 
     final start = ((page as int) - 1) * (size as int);
     final end = start + size;
@@ -405,16 +416,15 @@ class MockData {
   ];
 
   /// GET /journey/folders - 获取所有文件夹
-  static const Map<String, dynamic> getAllFolders = {
-    "code": 0,
-    "msg": "success",
-    "data": {
-      "list": [
-        {"folderId": "folder_mock_001", "name": "城市旅行", "description": "各个城市旅行的记录", "createTime": "2026-04-01 10:00:00", "journeyCount": "2"},
-        {"folderId": "folder_mock_002", "name": "周末短途", "description": "周末到周边短途游", "createTime": "2026-04-15 14:00:00", "journeyCount": "0"},
-      ],
-    },
-  };
+  static Map<String, dynamic> getAllFolders() {
+    return {
+      "code": 0,
+      "msg": "success",
+      "data": {
+        "list": List<Map<String, dynamic>>.from(_folderList),
+      },
+    };
+  }
 
   /// POST /journey/folder - 新建文件夹
   static Map<String, dynamic> createFolder(Map<String, dynamic> body) {
@@ -435,7 +445,11 @@ class MockData {
     if (folder.isEmpty) {
       return {"code": 1006, "msg": "文件夹不存在", "data": null};
     }
-    final journeys = _journeyList.where((j) => j['folderId'] == id).toList();
+    // 支持通过 folderIds 匹配
+    final journeys = _journeyList.where((j) {
+      final ids = j['folderIds'] as List<dynamic>? ?? [];
+      return ids.contains(id) || j['folderId'] == id;
+    }).toList();
     return {
       "code": 0,
       "msg": "success",
@@ -461,11 +475,12 @@ class MockData {
     return {"code": 0, "msg": "删除成功", "data": null};
   }
 
-  /// POST /journey/folder/:folder/move/:journey - 行程移入文件夹
+  /// POST /journey/folder/:folder/move/:journey - 行程移入文件夹（替换式）
   static Map<String, dynamic> moveJourneyToFolder(String folderId, String journeyId) {
     final jIdx = _journeyList.indexWhere((j) => j['journeyId'] == journeyId);
     if (jIdx != -1) {
       _journeyList[jIdx]['folderId'] = folderId;
+      _journeyList[jIdx]['folderIds'] = [folderId];
     }
     return {"code": 0, "msg": "移入成功", "data": null};
   }
@@ -475,9 +490,11 @@ class MockData {
     final jIdx = _journeyList.indexWhere((j) => j['journeyId'] == journeyId);
     if (jIdx != -1) {
       _journeyList[jIdx]['folderId'] = null;
+      _journeyList[jIdx]['folderIds'] = [];
     }
     return {"code": 0, "msg": "移出成功", "data": null};
   }
+
 
   /// ==================== 环境上下文 ====================
 
@@ -626,13 +643,13 @@ class MockData {
 
     // ========== 文件夹接口 ==========
     if (path == '/journey/folders' && method == 'GET') {
-      return Map<String, dynamic>.from(getAllFolders);
+      return getAllFolders();
     }
     if (path == '/journey/folder' && method == 'POST') {
       return createFolder(body ?? {});
     }
+
     if (path.startsWith('/journey/folder/') && path.contains('/move/') && method == 'POST') {
-      // 解析 /journey/folder/:folder/move/:journey → ['', 'journey', 'folder', '{folderId}', 'move', '{journeyId}']
       final parts = path.split('/');
       if (parts.length >= 6) {
         final folderId = parts[3];
@@ -665,9 +682,9 @@ class MockData {
       if (!id.contains('/')) {
         return deleteFolder(id);
       }
-    }
 
-    // ========== 环境上下文 ==========
+      // ========== 环境上下文 ==========
+    }
     if (path == '/context/geo' && method == 'GET') {
       return Map<String, dynamic>.from(geoInfo);
     }

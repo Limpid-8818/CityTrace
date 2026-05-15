@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import 'list_controller.dart';
 import '../../models/journey_model.dart';
+import '../../components/journey_card.dart';
+import '../../components/classify_sheet.dart';
+import '../../components/app_dialog.dart';
 
 class ListPage extends GetView<ListController> {
   const ListPage({super.key});
@@ -27,26 +31,8 @@ class ListPage extends GetView<ListController> {
       ),
       body: Column(
         children: [
-          // 文件夹筛选条 (横向滑动)
           _buildFolderFilter(),
-
-          // 行程列表
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (controller.journeys.isEmpty) {
-                return _buildEmptyState();
-              }
-              return ListView.builder(
-                padding: EdgeInsets.all(20.r),
-                itemCount: controller.journeys.length,
-                itemBuilder: (context, index) =>
-                    _buildJourneyCard(controller.journeys[index]),
-              );
-            }),
-          ),
+          Expanded(child: _buildJourneyList()),
         ],
       ),
     );
@@ -62,19 +48,14 @@ class ListPage extends GetView<ListController> {
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           children: [
-            // “全部”选项
             _buildFilterChip("全部", "all"),
-            // 动态加载的文件夹
             ...controller.folders.map(
               (f) => _buildFilterChip(f.name, f.folderId, isDynamic: true),
             ),
             Padding(
               padding: EdgeInsets.only(right: 12.w),
               child: GestureDetector(
-                onTap: () => _showInputDialog(
-                  title: "新建文件夹",
-                  onConfirm: (name) => controller.createFolder(name),
-                ),
+                onTap: () => _showCreateFolderDialog(),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15.w),
                   decoration: BoxDecoration(
@@ -122,72 +103,64 @@ class ListPage extends GetView<ListController> {
     });
   }
 
-  /// 行程卡片
-  Widget _buildJourneyCard(JourneyModel journey) {
-    return GestureDetector(
+  /// 行程列表
+  Widget _buildJourneyList() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (controller.journeys.isEmpty) {
+        return const EmptyJourneyState();
+      }
+      return ListView.builder(
+        padding: EdgeInsets.all(20.r),
+        itemCount: controller.journeys.length,
+        itemBuilder: (context, index) =>
+            _buildCard(controller.journeys[index]),
+      );
+    });
+  }
+
+  /// 单个卡片（使用 SwipeableJourneyCard 组件）
+  Widget _buildCard(JourneyModel journey) {
+    return SwipeableJourneyCard(
+      journey: journey,
+      folders: controller.folders,
       onTap: () => Get.toNamed('/journey', arguments: journey.journeyId),
-      onLongPress: () => _showJoueneyOptions(journey), // 长按弹出删除/移动菜单
-      child: Container(
-        margin: EdgeInsets.only(bottom: 20.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // 卡片上半部分：路径缩略图或头图
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-              child: Image.network(
-                journey.cover,
-                height: 160.h,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) =>
-                    Container(color: Colors.teal.shade100, height: 160.h),
-              ),
-            ),
-            // 卡片下半部分：信息
-            Padding(
-              padding: EdgeInsets.all(16.r),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        journey.title,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        journey.startTime.split('T')[0],
-                        style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                      ),
-                    ],
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      onLongPress: () => _showJourneyOptions(journey),
+      onSwipeClassify: () => _showClassifySheet(journey),
     );
   }
 
-  void _showJoueneyOptions(JourneyModel journey) {
+  /// 弹出归类面板（使用 ClassifySheet 组件）
+  void _showClassifySheet(JourneyModel journey) {
+    ClassifySheet.show(
+      journey: journey,
+      folders: controller.folders,
+      onCreateFolder: (name) => controller.createFolder(name),
+      onConfirm: (journeyId, folderId) {
+        if (folderId != null) {
+          controller.moveJourney(journeyId, folderId);
+        } else {
+          controller.removeJourneyFromFolder(journeyId, journey.folderId ?? '');
+        }
+      },
+    );
+  }
+
+  /// 优化的新建文件夹弹窗（使用 AppInputDialog 组件）
+  void _showCreateFolderDialog() {
+    AppInputDialog.show(
+      title: "新建文件夹",
+      icon: Icons.create_new_folder_outlined,
+      hintText: "输入文件夹名称",
+      confirmText: "确定创建",
+      onConfirm: (name) => controller.createFolder(name),
+    );
+  }
+
+  /// 行程长按菜单
+  void _showJourneyOptions(JourneyModel journey) {
     Get.bottomSheet(
       Container(
         color: Colors.white,
@@ -208,15 +181,28 @@ class ListPage extends GetView<ListController> {
             ),
             ListTile(
               leading: const Icon(Icons.folder_open_outlined),
-              title: const Text("移动到文件夹"),
+              title: const Text("归类到文件夹"),
               onTap: () {
                 Get.back();
-                _showMoveFolderPicker(journey);
+                _showClassifySheet(journey);
               },
             ),
+            if (journey.folderId != null)
+              ListTile(
+                leading: const Icon(Icons.folder_off_outlined,
+                    color: Colors.orange),
+                title: const Text("移出文件夹",
+                    style: TextStyle(color: Colors.orange)),
+                onTap: () {
+                  Get.back();
+                  controller.removeJourneyFromFolder(
+                      journey.journeyId, journey.folderId!);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text("删除行程", style: TextStyle(color: Colors.red)),
+              title:
+                  const Text("删除行程", style: TextStyle(color: Colors.red)),
               onTap: () {
                 Get.back();
                 controller.deleteJourney(journey.journeyId);
@@ -228,20 +214,7 @@ class ListPage extends GetView<ListController> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.map_outlined, size: 80.r, color: Colors.grey.shade200),
-          SizedBox(height: 16.h),
-          const Text("这里空空如也，快去开启一段旅程吧", style: TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-
-  // 文件夹管理弹窗
+  /// 文件夹管理弹窗
   void _showFolderOptions(String folderId, String currentName) {
     Get.bottomSheet(
       Container(
@@ -263,20 +236,17 @@ class ListPage extends GetView<ListController> {
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text("删除文件夹", style: TextStyle(color: Colors.red)),
+              title: const Text("删除文件夹",
+                  style: TextStyle(color: Colors.red)),
               onTap: () {
                 Get.back();
-                Get.defaultDialog(
+                AppConfirmDialog.show(
                   title: "确认删除",
-                  middleText: "删除文件夹不会删除其中的行程，确定吗？",
-                  textConfirm: "确定",
-                  textCancel: "取消",
-                  confirmTextColor: Colors.white,
-                  buttonColor: Colors.red,
-                  onConfirm: () {
-                    controller.deleteFolder(folderId);
-                    Get.back();
-                  },
+                  message: "删除文件夹不会删除其中的行程，确定吗？",
+                  confirmText: "确定",
+                  cancelText: "取消",
+                  confirmColor: Colors.red,
+                  onConfirm: () => controller.deleteFolder(folderId),
                 );
               },
             ),
@@ -286,89 +256,16 @@ class ListPage extends GetView<ListController> {
     );
   }
 
+  /// 输入对话框（使用 AppInputDialog 组件）
   void _showInputDialog({
     required String title,
     String initialValue = "",
     required Function(String) onConfirm,
   }) {
-    final textController = TextEditingController(text: initialValue);
-    Get.dialog(
-      AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: "请输入名称"),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text("取消")),
-          ElevatedButton(
-            onPressed: () {
-              onConfirm(textController.text.trim());
-              Get.back();
-            },
-            child: const Text("确定"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 弹出文件夹选择列表
-  void _showMoveFolderPicker(JourneyModel journey) {
-    Get.bottomSheet(
-      Container(
-        constraints: BoxConstraints(maxHeight: Get.height * 0.6), // 防止文件夹过多撑满屏幕
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(20.r),
-              child: Text(
-                "移动到文件夹",
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Divider(height: 1.h),
-            Expanded(
-              child: Obx(() {
-                if (controller.folders.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "暂无可选文件夹",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: controller.folders.length,
-                  itemBuilder: (context, index) {
-                    final folder = controller.folders[index];
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.folder_shared_outlined,
-                        color: Colors.teal,
-                      ),
-                      title: Text(folder.name),
-                      onTap: () {
-                        Get.back();
-                        controller.moveJourney(
-                          journey.journeyId,
-                          folder.folderId,
-                        );
-                      },
-                    );
-                  },
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
+    AppInputDialog.show(
+      title: title,
+      initialValue: initialValue,
+      onConfirm: (value) => onConfirm(value),
     );
   }
 }

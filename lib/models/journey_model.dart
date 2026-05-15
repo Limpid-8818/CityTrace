@@ -11,7 +11,7 @@ class JourneyModel {
   final String status; // ongoing, ended
   final String startTime;
   final String? endTime;
-  final String? folderId;
+  final String? folderId; // 所属文件夹
   final List<String>? moments; // 瞬间 ID 列表
 
   JourneyModel({
@@ -25,6 +25,12 @@ class JourneyModel {
     this.folderId,
     this.moments,
   });
+
+  /// 获取所属文件夹ID（可能为 null）
+  String? getFolderId() => folderId;
+
+  /// 判断是否属于某个文件夹
+  bool isInFolder(String fid) => folderId == fid;
 
   factory JourneyModel.fromJson(Map<String, dynamic> json) =>
       _$JourneyModelFromJson(json);

@@ -14,7 +14,7 @@ class ListController extends GetxController {
   final RxList<FolderModel> folders = <FolderModel>[].obs;
   final RxList<JourneyModel> journeys = <JourneyModel>[].obs;
 
-  final RxString selectedFolderId = "all".obs; // "all" 表示显示全部
+  final RxString selectedFolderId = "all".obs;
   final RxBool isLoading = true.obs;
 
   @override
@@ -23,45 +23,37 @@ class ListController extends GetxController {
     initData();
   }
 
-  /// 初始加载
   Future<void> initData() async {
     isLoading.value = true;
-    // 请求文件夹和首屏行程
     await Future.wait([_fetchFolders(), _fetchJourneys()]);
     isLoading.value = false;
   }
 
-  /// 获取所有文件夹
   Future<void> _fetchFolders() async {
     final list = await _folderService.getAllFolders();
     folders.assignAll(list);
   }
 
-  /// 获取行程列表 (支持按文件夹过滤)
   Future<void> _fetchJourneys() async {
-    // 如果是 "all"，则为空字符串
     String filterId = selectedFolderId.value == "all"
         ? ""
         : selectedFolderId.value;
 
     final list = await _journeyService.getJourneyList(
       page: 1,
-      size: 20,
+      size: 100,
       folderId: filterId,
     );
     final completedList = list.where((e) => e.status != "ongoing").toList();
     journeys.assignAll(completedList);
   }
 
-  /// 切换文件夹逻辑
   void onFolderChanged(String folderId) {
     if (selectedFolderId.value == folderId) return;
-
     selectedFolderId.value = folderId;
     _fetchJourneys();
   }
 
-  /// 重命名行程
   Future<void> renameJourney(String journeyId, String newTitle) async {
     if (newTitle.isEmpty) return;
 
@@ -71,13 +63,11 @@ class ListController extends GetxController {
     );
 
     if (updatedJourney != null) {
-      // 找到本地列表中的 index 并替换，触发 Obx 刷新
       int index = journeys.indexWhere((j) => j.journeyId == journeyId);
       if (index != -1) {
         journeys[index] = updatedJourney;
-        journeys.refresh(); // 通知 RxList 更新
+        journeys.refresh();
       }
-      // 主页更新
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().loadRecentTrips();
       }
@@ -87,9 +77,8 @@ class ListController extends GetxController {
     }
   }
 
-  /// 移动行程到指定文件夹
+  /// 移动行程到指定文件夹（单分类，覆盖式）
   Future<void> moveJourney(String journeyId, String targetFolderId) async {
-    // 调用 folderService 中已有的 moveJourneyToFolder
     final success = await _folderService.moveJourneyToFolder(
       targetFolderId,
       journeyId,
@@ -97,19 +86,34 @@ class ListController extends GetxController {
 
     if (success) {
       Get.snackbar("成功", "行程已移动");
-      // 移动后，为了保证当前文件夹显示的列表准确，重新获取一次列表
       _fetchJourneys();
     } else {
       Get.snackbar("错误", "移动失败，请重试");
     }
   }
 
-  /// 删除行程逻辑
+  /// 将行程从指定文件夹移出
+  Future<void> removeJourneyFromFolder(
+    String journeyId,
+    String folderId,
+  ) async {
+    final success = await _folderService.removeJourneyFromFolder(
+      folderId,
+      journeyId,
+    );
+
+    if (success) {
+      Get.snackbar("提示", "已从文件夹移出");
+      _fetchJourneys();
+    } else {
+      Get.snackbar("错误", "移出失败，请重试");
+    }
+  }
+
   Future<void> deleteJourney(String id) async {
     final success = await _journeyService.deleteJourney(id);
     if (success) {
       journeys.removeWhere((item) => item.journeyId == id);
-      // 主页更新
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().loadRecentTrips();
       }
@@ -117,7 +121,6 @@ class ListController extends GetxController {
     }
   }
 
-  /// 创建文件夹
   Future<void> createFolder(String name) async {
     if (name.isEmpty) return;
     final newFolder = await _folderService.createFolder(name, "");
@@ -127,26 +130,22 @@ class ListController extends GetxController {
     }
   }
 
-  /// 重命名文件夹
   Future<void> renameFolder(String folderId, String newName) async {
     if (newName.isEmpty) return;
     final updated = await _folderService.updateFolder(folderId, newName, "");
     if (updated != null) {
-      // 找到本地列表中的 index 并替换
       int index = folders.indexWhere((f) => f.folderId == folderId);
       if (index != -1) {
         folders[index] = updated;
-        folders.refresh(); // 通知 UI 更新
+        folders.refresh();
       }
       Get.snackbar("成功", "重命名成功");
     }
   }
 
-  /// 删除文件夹
   Future<void> deleteFolder(String folderId) async {
     final success = await _folderService.deleteFolder(folderId);
     if (success) {
-      // 如果当前选中的是被删除的文件夹，切回 "all"
       if (selectedFolderId.value == folderId) {
         selectedFolderId.value = "all";
         _fetchJourneys();
