@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../core/theme/app_colors.dart';
@@ -82,6 +83,41 @@ class ShareCardState extends State<ShareCard> {
     } catch (e) {
       debugPrint('导出图片失败: $e');
       return null;
+    }
+  }
+
+  /// 将卡片保存到手机相册
+  Future<void> saveToGallery() async {
+    try {
+      // 先请求权限
+      bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess();
+        if (!hasAccess) {
+          Get.snackbar("保存失败", "请在设置中授予相册访问权限");
+          return;
+        }
+      }
+
+      final bytes = await exportAsPng();
+      if (bytes == null) {
+        Get.snackbar("保存失败", "图片生成异常，请稍后重试");
+        return;
+      }
+
+      await Gal.putImageBytes(
+        bytes,
+        album: 'CityTrace',
+        name: 'citytrace_share_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      Get.snackbar("保存成功", "已保存到手机相册");
+    } on GalException catch (e) {
+      debugPrint('保存到相册失败(GalException): $e');
+      Get.snackbar("保存失败", "请检查相册权限后重试");
+    } catch (e) {
+      debugPrint('保存到相册失败: $e');
+      Get.snackbar("保存失败", "请检查相册权限后重试");
     }
   }
 

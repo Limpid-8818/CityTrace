@@ -35,28 +35,28 @@ class _ShareViewPageState extends State<ShareViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryDarker,
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.close, color: Colors.black87),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           "分享旅程",
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.black87,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.download_outlined, color: Colors.white),
+            icon: const Icon(Icons.download_outlined, color: AppColors.primary),
             tooltip: "保存到相册",
             onPressed: () {
-              Get.snackbar("提示", "保存到相册功能开发中");
+              _shareCardKey.currentState?.saveToGallery();
             },
           ),
         ],
@@ -91,8 +91,15 @@ class _ShareViewPageState extends State<ShareViewPage> {
     return Container(
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
       decoration: BoxDecoration(
-        color: AppColors.primaryOpacity005,
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10.r,
+            offset: Offset(0, -2.h),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -101,7 +108,7 @@ class _ShareViewPageState extends State<ShareViewPage> {
           Text(
             "生成一张精美的旅程卡片，分享给好友",
             style: TextStyle(
-              color: Colors.white54,
+              color: AppColors.textGrey,
               fontSize: 13.sp,
             ),
           ),
