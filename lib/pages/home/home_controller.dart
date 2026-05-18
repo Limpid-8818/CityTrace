@@ -70,7 +70,7 @@ class HomeController extends GetxController {
     if (cachedId == null || cachedId.isEmpty) return;
 
     try {
-      // 向后端请求该行程的详情，验证是否真的“正在进行”
+      // 向后端请求该行程的详情，验证是否真的"正在进行"
       final journeyDetail = await _journeyService.getJourneyDetail(cachedId);
 
       if (journeyDetail != null && journeyDetail.status == "ongoing") {

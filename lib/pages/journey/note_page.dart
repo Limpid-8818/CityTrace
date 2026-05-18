@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../components/ui/info_pill.dart';
+import '../../core/theme/app_colors.dart';
 import 'note_controller.dart';
 
 class NotePage extends StatelessWidget {
@@ -12,7 +14,7 @@ class NotePage extends StatelessWidget {
     final controller = Get.put(NoteController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
         title: Text(
           "AI 寻迹成书",
@@ -76,9 +78,7 @@ class NotePage extends StatelessWidget {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.r),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF009688),
-                              ),
+                              borderSide: BorderSide(color: AppColors.primary),
                             ),
                           ),
                         ),
@@ -99,7 +99,7 @@ class NotePage extends StatelessWidget {
                       ? null
                       : () => controller.startGenerating(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF009688),
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
@@ -120,13 +120,27 @@ class NotePage extends StatelessWidget {
 
             SizedBox(height: 40.h),
 
-            // 结果展示区域
+            // 结果展示区域 - 平滑过渡
             Obx(() {
-              if (controller.generatedBody.isEmpty &&
-                  !controller.isGenerating.value) {
-                return _buildEmptyState();
+              Widget resultWidget;
+              if (controller.isGenerating.value &&
+                  controller.generatedBody.isEmpty) {
+                // 生成中 → 显示加载骨架屏
+                resultWidget = _buildLoadingSkeleton();
+              } else if (controller.generatedBody.isNotEmpty) {
+                // 有内容 → 显示结果卡片（含流式输出阶段）
+                resultWidget = _buildResultCard(controller);
+              } else {
+                // 无内容且非生成中 → 显示空状态
+                resultWidget = _buildEmptyState();
               }
-              return _buildResultCard(controller);
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: resultWidget,
+              );
             }),
           ],
         ),
@@ -156,13 +170,11 @@ class NotePage extends StatelessWidget {
               padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF009688).withOpacity(0.1)
+                    ? AppColors.primaryOpacity010
                     : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF009688)
-                      : Colors.transparent,
+                  color: isSelected ? AppColors.primary : Colors.transparent,
                   width: 2.w,
                 ),
               ),
@@ -174,9 +186,7 @@ class NotePage extends StatelessWidget {
                     style['name']!,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? const Color(0xFF009688)
-                          : Colors.black87,
+                      color: isSelected ? AppColors.primary : Colors.black87,
                     ),
                   ),
                   Text(
@@ -194,13 +204,91 @@ class NotePage extends StatelessWidget {
     );
   }
 
-  Widget _buildResultCard(NoteController controller) {
+  /// 加载中的骨架屏
+  Widget _buildLoadingSkeleton() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      key: const ValueKey('loading'),
       children: [
         Row(
           children: [
-            Icon(Icons.auto_awesome, color: Color(0xFF009688), size: 20.r),
+            Icon(Icons.auto_awesome, color: AppColors.primary, size: 20.r),
+            SizedBox(width: 8.w),
+            Text(
+              "AI 创作中...",
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题骨架
+              Container(
+                width: 160.w,
+                height: 22.sp,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              // 内容骨架 x3
+              ...List.generate(3, (i) {
+                final widths = [320.w, 280.w, 180.w];
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Container(
+                    width: widths[i],
+                    height: 14.sp,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                );
+              }),
+              SizedBox(height: 12.h),
+              // 底部标签骨架
+              Row(
+                children: List.generate(3, (i) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: Container(
+                      width: 50.w,
+                      height: 16.sp,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultCard(NoteController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      key: const ValueKey('result'),
+      children: [
+        Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.primary, size: 20.r),
             SizedBox(width: 8.w),
             Text(
               "生成结果",
@@ -221,7 +309,6 @@ class NotePage extends StatelessWidget {
             () => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 标题部分
                 controller.isEditing.value
                     ? TextField(
                         controller: controller.titleEditController,
@@ -236,14 +323,13 @@ class NotePage extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        controller.generatedTitle.value,
+                        controller.displayedTitle.value,
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                 Divider(height: 32.h),
-                // 正文部分
                 controller.isEditing.value
                     ? TextField(
                         controller: controller.bodyEditController,
@@ -255,19 +341,16 @@ class NotePage extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        controller.generatedBody.value,
+                        controller.displayedBody.value,
                         style: TextStyle(fontSize: 15.sp, height: 1.6),
                       ),
                 SizedBox(height: 20.h),
-                // 标签部分
                 Wrap(
                   spacing: 8.w,
+                  runSpacing: 8.h,
                   children: controller.hashtags
                       .map(
-                        (t) => Text(
-                          "#$t",
-                          style: const TextStyle(color: Color(0xFF009688)),
-                        ),
+                        (t) => InfoPill(icon: Icons.tag, text: "#$t"),
                       )
                       .toList(),
                 ),
@@ -290,7 +373,7 @@ class NotePage extends StatelessWidget {
                   },
                   child: Text(
                     controller.isEditing.value ? "保存修改" : "手动修改",
-                    style: TextStyle(color: const Color(0xFF009688)),
+                    style: TextStyle(color: AppColors.primary),
                   ),
                 ),
               ),
@@ -299,7 +382,7 @@ class NotePage extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => controller.shareToClipboard(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF009688),
+                    backgroundColor: AppColors.primary,
                   ),
                   child: const Text(
                     "分享足迹",
@@ -316,6 +399,7 @@ class NotePage extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return Center(
+      key: const ValueKey('empty'),
       child: Column(
         children: [
           Icon(Icons.edit_note, size: 64.r, color: Colors.grey.shade200),

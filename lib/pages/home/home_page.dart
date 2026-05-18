@@ -1,9 +1,12 @@
+import 'dart:ui' as ui;
+import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
 import '../../components/map_view.dart';
+import '../../components/ui/info_pill.dart';
 import 'home_controller.dart';
 
 class HomePage extends StatelessWidget {
@@ -15,29 +18,49 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       key: controller.scaffoldKey,
-      backgroundColor: Colors.white,
+      drawerEnableOpenDragGesture: true,
+      drawerEdgeDragWidth: 48.w,
+      backgroundColor: AppColors.pageBackground,
       drawer: _buildLeftDrawer(), // 侧拉菜单
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 12.h),
-              _buildTopBar(), // Header
-              SizedBox(height: 20.h),
-              _buildWelcomeSection(), // 欢迎语
-              SizedBox(height: 16.h),
-              _buildContextSection(), // 环境信息
-              SizedBox(height: 24.h),
-              _buildHeroCard(), // 行程状态信息
-              SizedBox(height: 32.h),
-              _buildRecentTripsTitle(), // 最近行程标题
-              SizedBox(height: 16.h),
-              _buildRecentTripsSection(), // 最近行程信息
-              SizedBox(height: 48.h), // 留出 FAB 空间，避免遮挡行程信息
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 12.h),
+                  _buildTopBar(), // Header
+                  SizedBox(height: 20.h),
+                  _buildWelcomeSection(), // 欢迎语
+                  SizedBox(height: 16.h),
+                  _buildContextSection(), // 环境信息
+                  SizedBox(height: 24.h),
+                  _buildHeroCard(), // 行程状态信息
+                  SizedBox(height: 32.h),
+                  _buildRecentTripsTitle(), // 最近行程标题
+                  SizedBox(height: 16.h),
+                  _buildRecentTripsSection(), // 最近行程信息
+                  SizedBox(height: 48.h), // 留出 FAB 空间，避免遮挡行程信息
+                ],
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragUpdate: (details) {
+                  if (details.delta.dx > 2) {
+                    controller.scaffoldKey.currentState?.openDrawer();
+                  }
+                },
+                child: SizedBox(width: 48.w),
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -74,21 +97,21 @@ class HomePage extends StatelessWidget {
                   "全部行程",
                   () => controller.handleMenuClick('/list'),
                 ),
-                // _buildDrawerItem(
-                //   Icons.calendar_today_outlined,
-                //   "行程计划",
-                //   () => controller.handleMenuClick('/plans'),
+                //_buildDrawerItem(
+                //  Icons.calendar_today_outlined,
+                //  "行程计划",
+                //  () => controller.handleMenuClick('/plans'),
                 // ),
                 // _buildDrawerItem(
-                //   Icons.favorite_outline,
-                //   "我的收藏",
-                //   () => controller.handleMenuClick('/favorites'),
+                //  Icons.favorite_outline,
+                //  "我的收藏",
+                //  () => controller.handleMenuClick('/favorites'),
                 // ),
                 // _buildDrawerItem(
-                //   Icons.share_outlined,
-                //   "分享动态",
-                //   () => controller.handleMenuClick('/share'),
-                // ),
+                //  Icons.share_outlined,
+                //  "分享动态",
+                //  () => controller.handleMenuClick('/share'),
+                //),
               ],
             ),
           ),
@@ -119,7 +142,7 @@ class HomePage extends StatelessWidget {
 
       return Container(
         padding: EdgeInsets.fromLTRB(24.w, 80.h, 24.w, 32.h),
-        color: const Color(0xFF009688),
+        color: AppColors.primary,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -285,18 +308,14 @@ class HomePage extends StatelessWidget {
     return Obx(
       () => Row(
         children: [
-          Icon(Icons.location_on_outlined, size: 18.r, color: Colors.grey),
-          SizedBox(width: 4.w),
-          Text(
-            controller.locationDisplay.value,
-            style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+          InfoPill(
+            icon: Icons.location_on_outlined,
+            text: controller.locationDisplay.value,
           ),
-          SizedBox(width: 16.w),
-          Icon(Icons.wb_cloudy_outlined, size: 18.r, color: Colors.grey),
-          SizedBox(width: 4.w),
-          Text(
-            controller.weatherDisplay.value,
-            style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+          SizedBox(width: 10.w),
+          InfoPill(
+            icon: Icons.wb_cloudy_outlined,
+            text: controller.weatherDisplay.value,
           ),
         ],
       ),
@@ -325,10 +344,10 @@ class HomePage extends StatelessWidget {
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32.r),
-        color: const Color(0xFF009688), // 使用主题色作为背景
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF009688).withOpacity(0.3),
+            color: AppColors.primaryOpacity030,
             blurRadius: 15.r,
             offset: Offset(0, 8.h),
           ),
@@ -359,7 +378,6 @@ class HomePage extends StatelessWidget {
                 fontSize: 14.sp,
                 fontFamily: 'monospace',
               ),
-              // 使用 monospace 字体可以防止数字变动时文字左右跳动
             ),
           ),
           const Spacer(),
@@ -369,7 +387,7 @@ class HomePage extends StatelessWidget {
               onPressed: () => controller.handleJourneyCardClick(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF009688),
+                foregroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.r),
                 ),
@@ -406,7 +424,7 @@ class HomePage extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: const Color(0xFF009688),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Icon(Icons.map_outlined, color: Colors.white, size: 40.r),
@@ -498,7 +516,7 @@ class HomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Hero(
-              tag: "journey_cover_$journeyId", // 确保 tag 全局唯一且两页一致
+              tag: "journey_cover_$journeyId",
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16.r),
                 child: Image.network(
@@ -539,7 +557,7 @@ class HomePage extends StatelessWidget {
             Text(
               trip['title']!,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
-              maxLines: 1, // 防止标题过长撑开布局
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
@@ -555,40 +573,57 @@ class HomePage extends StatelessWidget {
   Widget _buildMainFab() {
     HomeController controller = Get.find<HomeController>();
     return Obx(() {
-      // 如果是行程中状态，不显示FAB（透明）
       if (controller.isInJourney) {
         return Hero(
           tag: "journey_fab",
           child: Container(
             width: 48.r,
             height: 48.r,
-            color: Colors.transparent, // 透明
+            color: Colors.transparent,
           ),
         );
       }
 
-      return SizedBox(
-        width: 100.w,
-        height: 100.w,
-        child: FloatingActionButton(
-          heroTag: "journey_fab",
-          onPressed: () {
-            if (controller.isLoggedIn) {
-              controller.startMapLoadingTimer();
-              Get.bottomSheet(
-                _buildConfirmBottomSheet(),
-                isScrollControlled: true,
-              );
-            } else {
-              controller.handleUnlogFabClick();
-            }
-          },
-          backgroundColor: const Color(0xFF009688),
-          shape: const CircleBorder(),
-          child: Icon(
-            Icons.play_arrow_rounded,
-            color: Colors.white,
-            size: 48.r,
+      return Padding(
+        padding: EdgeInsets.only(bottom: 40.h),
+        child: SizedBox(
+          width: 160.w,
+          height: 48.h,
+          child: ElevatedButton(
+            onPressed: () {
+              if (controller.isLoggedIn) {
+                controller.startMapLoadingTimer();
+                Get.bottomSheet(
+                  _buildConfirmBottomSheet(),
+                  isScrollControlled: true,
+                );
+              } else {
+                controller.handleUnlogFabClick();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              shadowColor: AppColors.primaryOpacity040,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.play_arrow_rounded, size: 28.r),
+                SizedBox(width: 6.w),
+                Text(
+                  "开始行程",
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -604,7 +639,7 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // 弹窗高度自适应
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "准备好出发了吗？",
@@ -612,7 +647,6 @@ class HomePage extends StatelessWidget {
           ),
           SizedBox(height: 20.h),
 
-          // 弹窗内的地图预览区
           Container(
             height: 200.h,
             decoration: BoxDecoration(
@@ -639,14 +673,13 @@ class HomePage extends StatelessWidget {
 
           SizedBox(height: 24.h),
 
-          // 立即出发按钮
           SizedBox(
             width: double.infinity,
             height: 56.h,
             child: ElevatedButton(
               onPressed: () => controller.onStartJourneyConfirmed(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF009688),
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.r),
                 ),

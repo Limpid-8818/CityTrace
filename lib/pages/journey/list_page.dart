@@ -1,3 +1,4 @@
+import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -16,7 +17,7 @@ class ListPage extends GetView<ListController> {
     Get.put(ListController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
         title: Text(
           "我的行程",
@@ -85,7 +86,7 @@ class ListPage extends GetView<ListController> {
           margin: EdgeInsets.only(right: 12.w),
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF009688) : Colors.grey.shade100,
+            color: isSelected ? AppColors.primary : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(25.r),
           ),
           child: Center(
@@ -113,10 +114,12 @@ class ListPage extends GetView<ListController> {
         return const EmptyJourneyState();
       }
       return ListView.builder(
-        padding: EdgeInsets.all(20.r),
+        padding: EdgeInsets.symmetric(horizontal: 20.r, vertical: 0),
         itemCount: controller.journeys.length,
-        itemBuilder: (context, index) =>
-            _buildCard(controller.journeys[index]),
+        itemBuilder: (context, index) => Padding(
+          padding: EdgeInsets.only(bottom: 30.h),
+          child: _buildCard(controller.journeys[index]),
+        ),
       );
     });
   }
@@ -161,99 +164,70 @@ class ListPage extends GetView<ListController> {
 
   /// 行程长按菜单
   void _showJourneyOptions(JourneyModel journey) {
-    Get.bottomSheet(
-      Container(
-        color: Colors.white,
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text("重命名行程"),
-              onTap: () {
-                Get.back();
-                _showInputDialog(
-                  title: "重命名行程",
-                  initialValue: journey.title,
-                  onConfirm: (newName) =>
-                      controller.renameJourney(journey.journeyId, newName),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.folder_open_outlined),
-              title: const Text("归类到文件夹"),
-              onTap: () {
-                Get.back();
-                _showClassifySheet(journey);
-              },
-            ),
-            if (journey.folderId != null)
-              ListTile(
-                leading: const Icon(Icons.folder_off_outlined,
-                    color: Colors.orange),
-                title: const Text("移出文件夹",
-                    style: TextStyle(color: Colors.orange)),
-                onTap: () {
-                  Get.back();
-                  controller.removeJourneyFromFolder(
-                      journey.journeyId, journey.folderId!);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title:
-                  const Text("删除行程", style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Get.back();
-                controller.deleteJourney(journey.journeyId);
-              },
-            ),
-          ],
+    final actions = <AppSheetAction>[
+      AppSheetAction(
+        icon: Icons.edit_outlined,
+        label: "重命名行程",
+        onTap: () => _showInputDialog(
+          title: "重命名行程",
+          initialValue: journey.title,
+          onConfirm: (newName) =>
+              controller.renameJourney(journey.journeyId, newName),
         ),
       ),
-    );
+      AppSheetAction(
+        icon: Icons.folder_open_outlined,
+        label: "归类到文件夹",
+        onTap: () => _showClassifySheet(journey),
+      ),
+      if (journey.folderId != null)
+        AppSheetAction(
+          icon: Icons.folder_off_outlined,
+          label: "移出文件夹",
+          color: Colors.orange,
+          onTap: () => controller.removeJourneyFromFolder(
+              journey.journeyId, journey.folderId!),
+        ),
+      AppSheetAction(
+        icon: Icons.delete_outline,
+        label: "删除行程",
+        color: Colors.red,
+        onTap: () => controller.deleteJourney(journey.journeyId),
+      ),
+    ];
+    AppActionSheet.show(title: "行程操作", actions: actions);
   }
 
   /// 文件夹管理弹窗
   void _showFolderOptions(String folderId, String currentName) {
-    Get.bottomSheet(
-      Container(
-        color: Colors.white,
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text("重命名文件夹"),
-              onTap: () {
-                Get.back();
-                _showInputDialog(
-                  title: "重命名文件夹",
-                  initialValue: currentName,
-                  onConfirm: (newName) =>
-                      controller.renameFolder(folderId, newName),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text("删除文件夹",
-                  style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Get.back();
-                AppConfirmDialog.show(
-                  title: "确认删除",
-                  message: "删除文件夹不会删除其中的行程，确定吗？",
-                  confirmText: "确定",
-                  cancelText: "取消",
-                  confirmColor: Colors.red,
-                  onConfirm: () => controller.deleteFolder(folderId),
-                );
-              },
-            ),
-          ],
+    final actions = <AppSheetAction>[
+      AppSheetAction(
+        icon: Icons.edit_outlined,
+        label: "重命名文件夹",
+        onTap: () => _showInputDialog(
+          title: "重命名文件夹",
+          initialValue: currentName,
+          onConfirm: (newName) =>
+              controller.renameFolder(folderId, newName),
         ),
       ),
-    );
+      AppSheetAction(
+        icon: Icons.delete_outline,
+        label: "删除文件夹",
+        color: Colors.red,
+        onTap: () {
+          AppConfirmDialog.show(
+            title: "确认删除",
+            message: "删除文件夹不会删除其中的行程，确定吗？",
+            confirmText: "确定",
+            cancelText: "取消",
+            confirmColor: Colors.red,
+            onConfirm: () => controller.deleteFolder(folderId),
+          );
+        },
+      ),
+    ];
+    AppActionSheet.show(title: "文件夹操作", actions: actions);
   }
 
   /// 输入对话框（使用 AppInputDialog 组件）

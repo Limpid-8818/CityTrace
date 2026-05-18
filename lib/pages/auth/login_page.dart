@@ -1,3 +1,4 @@
+import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,8 +14,8 @@ class LoginPage extends StatelessWidget {
     final controller = Get.put(LoginController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+      backgroundColor: AppColors.pageBackground,
+      appBar: AppBar(backgroundColor: AppColors.pageBackground, elevation: 0),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(32.r),
         child: Column(
@@ -85,8 +86,8 @@ class LoginPage extends StatelessWidget {
                       ? null
                       : () => controller.submit(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF009688),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
@@ -114,7 +115,7 @@ class LoginPage extends StatelessWidget {
                 child: Obx(
                   () => Text(
                     controller.isLogin.value ? "没有账号？点击注册" : "已有账号？返回登录",
-                    style: const TextStyle(color: Color(0xFF009688)),
+                    style: TextStyle(color: AppColors.primary),
                   ),
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -69,12 +70,12 @@ class AppInputDialog extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF009688).withOpacity(0.1),
+                      color: AppColors.primaryOpacity010,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Icon(
                       icon,
-                      color: const Color(0xFF009688),
+                      color: AppColors.primary,
                       size: 24.r,
                     ),
                   ),
@@ -120,7 +121,7 @@ class AppInputDialog extends StatelessWidget {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
                   borderSide: BorderSide(
-                    color: const Color(0xFF009688),
+                    color: AppColors.primary,
                     width: 1.5,
                   ),
                 ),
@@ -151,8 +152,8 @@ class AppInputDialog extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => _handleSubmit(textController.text.trim(), context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF009688),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
@@ -191,6 +192,104 @@ class AppInputDialog extends StatelessWidget {
       onConfirm!(name);
     }
     Get.back();
+  }
+}
+
+/// 选项模型
+class AppSheetAction {
+  final IconData icon;
+  final String label;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const AppSheetAction({
+    required this.icon,
+    required this.label,
+    this.color,
+    required this.onTap,
+  });
+}
+
+/// 应用级操作菜单 BottomSheet
+class AppActionSheet extends StatelessWidget {
+  final String title;
+  final List<AppSheetAction> actions;
+
+  const AppActionSheet({
+    super.key,
+    required this.title,
+    required this.actions,
+  });
+
+  /// 快捷弹出操作菜单
+  static Future<void> show({
+    required String title,
+    required List<AppSheetAction> actions,
+  }) {
+    return Get.bottomSheet(
+      AppActionSheet(title: title, actions: actions),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 拖拽指示条
+          Container(
+            margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+            width: 40.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+          // 标题
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          Divider(height: 1.h, color: Colors.grey.shade200),
+          ...actions.map((action) => _buildActionItem(action)),
+          SizedBox(height: 12.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionItem(AppSheetAction action) {
+    return ListTile(
+      leading: Icon(
+        action.icon,
+        color: action.color ?? Colors.black87,
+        size: 22.r,
+      ),
+      title: Text(
+        action.label,
+        style: TextStyle(
+          fontSize: 15.sp,
+          color: action.color ?? Colors.black87,
+        ),
+      ),
+      onTap: () {
+        Get.back();
+        action.onTap();
+      },
+    );
   }
 }
 
