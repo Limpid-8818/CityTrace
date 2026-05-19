@@ -154,7 +154,7 @@ class _CardContent extends StatelessWidget {
     return Container(
       width: cardWidth,
       decoration: BoxDecoration(
-        color: Colors.white,
+        // 不设置 color，确保导出图片时圆角外为透明
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
@@ -165,18 +165,21 @@ class _CardContent extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // === 顶部：封面区域 ===
-          _buildCoverSection(),
+      child: Container(
+        color: Colors.white,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // === 顶部：封面区域 ===
+            _buildCoverSection(),
 
-          // === 中部：内容信息 ===
-          _buildInfoSection(),
+            // === 中部：内容信息 ===
+            _buildInfoSection(),
 
-          // === 底部：品牌水印 ===
-          _buildFooter(),
-        ],
+            // === 底部：品牌水印 ===
+            _buildFooter(),
+          ],
+        ),
       ),
     );
   }
