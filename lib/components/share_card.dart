@@ -11,9 +11,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:latlong2/latlong.dart';
+
 import '../core/theme/app_colors.dart';
 import '../models/journey_model.dart';
 import '../models/moment_model.dart';
+import '../mock/mock_data.dart';
+import 'static_route_thumbnail.dart';
 
 /// 分享卡片组件
 /// 可将行程详情渲染为一张精美的图片，支持导出和分享
@@ -323,6 +327,11 @@ class _CardContent extends StatelessWidget {
               ),
             ),
 
+          // 轨迹缩略图（静态底图 + CustomPainter 绘制路径）
+          SizedBox(height: 8.h),
+          _buildMockRouteThumbnail(),
+          SizedBox(height: 8.h),
+
           // 瞬间列表（自适应高度，每个瞬间包含媒体+文字说明）
           if (moments.isNotEmpty) ...[
             SizedBox(height: 8.h),
@@ -338,6 +347,22 @@ class _CardContent extends StatelessWidget {
             _buildMomentsList(),
           ],
         ],
+      ),
+    );
+  }
+
+  /// 构建Mock轨迹缩略图
+  Widget _buildMockRouteThumbnail() {
+    // 使用 mock_data.dart 中的统一模拟轨迹点数据
+    final mockPoints = MockData.mockRoutePoints
+        .map((p) => LatLng(p['lat']!, p['lng']!))
+        .toList();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12.r),
+      child: StaticRouteThumbnail(
+        points: mockPoints,
+        height: 140.w,
       ),
     );
   }
