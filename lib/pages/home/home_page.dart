@@ -304,11 +304,13 @@ class HomePage extends StatelessWidget {
           InfoPill(
             icon: Icons.location_on_outlined,
             text: controller.locationDisplay.value,
+            backgroundColor: AppColors.white,
           ),
           SizedBox(width: 10.w),
           InfoPill(
             icon: Icons.wb_cloudy_outlined,
             text: controller.weatherDisplay.value,
+            backgroundColor: AppColors.white,
           ),
         ],
       ),

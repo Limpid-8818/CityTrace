@@ -1,7 +1,8 @@
+import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../core/theme/app_colors.dart';
+import 'ui/info_pill.dart';
 
 /// 游记分享卡片
 /// 将 AI 生成的游记（标题、正文、标签）渲染为精美的卡片图片，支持导出和分享
@@ -119,41 +120,11 @@ class NoteShareCard extends StatelessWidget {
     );
   }
 
-  /// 标签胶囊（与行程分享卡片的 InfoPill 样式一致）
+  /// 标签胶囊（使用统一的 InfoPill 组件）
   Widget _buildTagPill(String tag) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.tag,
-            size: 14.r,
-            color: AppColors.primary,
-          ),
-          SizedBox(width: 6.w),
-          Text(
-            "#$tag",
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textGrey,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
+    return InfoPill(
+      icon: Icons.tag,
+      text: "#$tag",
     );
   }
 

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../components/app_dialog.dart';
 import '../../components/app_popup_menu.dart';
 import '../../components/map_view.dart';
+import '../../components/ui/info_pill.dart';
 import 'image_preview_page.dart';
 import '../../core/utils/media_util.dart';
 import '../../core/utils/permission_util.dart';
@@ -374,21 +375,17 @@ class JourneyDetailPage extends StatelessWidget {
             child: Row(
               children: moment.tags!
                   .map(
-                    (tag) => Container(
-                      margin: EdgeInsets.only(right: 8.w),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryOpacity005,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Text(
-                        "#$tag",
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: AppColors.primary,
+                    (tag) => Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: InfoPill(
+                        icon: Icons.tag,
+                        text: "#$tag",
+                        iconColor: AppColors.primary,
+                        textColor: AppColors.primary,
+                        fontSize: 11,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
                       ),
                     ),
