@@ -9,6 +9,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../components/app_dialog.dart';
+import '../../components/app_popup_menu.dart';
 import '../../components/map_view.dart';
 import 'image_preview_page.dart';
 import '../../core/utils/media_util.dart';
@@ -107,35 +108,31 @@ class JourneyDetailPage extends StatelessWidget {
         ),
       ),
       actions: [
-        if (controller.isEnded) // 当行程结束则显示操作菜单
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'note') {
-                controller.goToNotePage();
-              } else if (value == 'share') {
-                controller.goToSharePage();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'note',
-                child: ListTile(
-                  leading: Icon(Icons.auto_awesome, color: AppColors.primary),
-                  title: Text('AI 寻迹'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'share',
-                child: ListTile(
-                  leading: Icon(Icons.share_outlined, color: AppColors.primary),
-                  title: Text('分享旅程'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
+        AppPopupMenu<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          enabled: controller.isEnded,
+          items: const [
+            PopupMenuItemData(
+              value: 'note',
+              title: 'AI 寻迹',
+              icon: Icons.auto_awesome,
+              iconColor: AppColors.primary,
+            ),
+            PopupMenuItemData(
+              value: 'share',
+              title: '分享旅程',
+              icon: Icons.share_outlined,
+              iconColor: AppColors.primary,
+            ),
+          ],
+          onSelected: (value) {
+            if (value == 'note') {
+              controller.goToNotePage();
+            } else if (value == 'share') {
+              controller.goToSharePage();
+            }
+          },
+        ),
       ],
     );
   }
