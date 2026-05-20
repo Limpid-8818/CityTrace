@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 /// 图片预览页面：支持点击放大、双击缩放、左右滑动切换同一行程中的多张图片
+/// 使用 photo_view 库提供更好的手势交互体验，包括自动回弹、平滑缩放等
 class ImagePreviewPage extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
@@ -18,61 +21,18 @@ class ImagePreviewPage extends StatefulWidget {
 class _ImagePreviewPageState extends State<ImagePreviewPage> {
   late PageController _pageController;
   late int _currentIndex;
-  late List<TransformationController> _transformControllers;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex.clamp(0, widget.imageUrls.length - 1);
     _pageController = PageController(initialPage: _currentIndex);
-    _transformControllers = List.generate(
-      widget.imageUrls.length,
-      (_) => TransformationController(),
-    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    for (final c in _transformControllers) {
-      c.dispose();
-    }
     super.dispose();
-  }
-
-  void _resetOtherTransforms(int exceptIndex) {
-    for (int i = 0; i < _transformControllers.length; i++) {
-      if (i != exceptIndex && !_transformControllers[i].value.isIdentity()) {
-        _transformControllers[i].value = Matrix4.identity();
-      }
-    }
-  }
-
-  void _onDoubleTap(int index) {
-    final controller = _transformControllers[index];
-    final currentScale = controller.value.getMaxScaleOnAxis();
-
-    if (currentScale > 1.0) {
-      // 双击缩小回原始大小
-      controller.value = Matrix4.identity();
-    } else {
-      // 双击放大到 2.5 倍（以屏幕中心为缩放原点）
-      final cx = MediaQuery.of(context).size.width / 2;
-      final cy = MediaQuery.of(context).size.height / 2;
-      const double s = 2.5;
-      // 矩阵: 围绕(cx,cy)缩放s倍
-      // [s 0 0 cx*(1-s)]
-      // [0 s 0 cy*(1-s)]
-      // [0 0 s 0       ]
-      // [0 0 0 1       ]
-      controller.value = Matrix4(
-        s, 0, 0, 0,
-        0, s, 0, 0,
-        0, 0, s, 0,
-        cx * (1 - s), cy * (1 - s), 0, 1,
-      );
-    }
-    setState(() {});
   }
 
   @override
@@ -86,18 +46,56 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 主体：左右滑动切换图片
-          PageView.builder(
-            controller: _pageController,
+          // 主体：使用 PhotoViewGallery 实现图片预览和切换
+          PhotoViewGallery.builder(
+            scrollPhysics: const BouncingScrollPhysics(),
+            builder: (BuildContext context, int index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: NetworkImage(widget.imageUrls[index]),
+                initialScale: PhotoViewComputedScale.contained,
+                minScale: PhotoViewComputedScale.contained * 0.8,
+                maxScale: PhotoViewComputedScale.covered * 3.0,
+                heroAttributes: PhotoViewHeroAttributes(
+                  tag: widget.imageUrls[index],
+                ),
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.white54,
+                          size: 64,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '图片加载失败',
+                          style: TextStyle(color: Colors.white54, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+            itemCount: widget.imageUrls.length,
+            loadingBuilder: (context, event) => Center(
+              child: CircularProgressIndicator(
+                value: event == null
+                    ? 0
+                    : event.cumulativeBytesLoaded /
+                          (event.expectedTotalBytes ?? 1),
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            ),
+            backgroundDecoration: const BoxDecoration(color: Colors.black),
+            pageController: _pageController,
             onPageChanged: (index) {
-              _resetOtherTransforms(index);
               setState(() {
                 _currentIndex = index;
               });
-            },
-            itemCount: widget.imageUrls.length,
-            itemBuilder: (context, index) {
-              return _buildZoomableImage(index);
             },
           ),
 
@@ -121,7 +119,10 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(20),
@@ -138,52 +139,6 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildZoomableImage(int index) {
-    return GestureDetector(
-      onDoubleTap: () => _onDoubleTap(index),
-      child: InteractiveViewer(
-        transformationController: _transformControllers[index],
-        minScale: 0.5,
-        maxScale: 4.0,
-        boundaryMargin: const EdgeInsets.all(80),
-        child: Center(
-          child: Image.network(
-            widget.imageUrls[index],
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              final total = loadingProgress.expectedTotalBytes;
-              final progress = total != null
-                  ? loadingProgress.cumulativeBytesLoaded / total
-                  : null;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: progress,
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.broken_image_outlined,
-                      color: Colors.white54, size: 64),
-                  SizedBox(height: 8),
-                  Text(
-                    '图片加载失败',
-                    style: TextStyle(color: Colors.white54, fontSize: 14),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
       ),
     );
   }
