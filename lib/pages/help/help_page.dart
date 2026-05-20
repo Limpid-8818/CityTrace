@@ -45,25 +45,13 @@ class HelpPage extends StatelessWidget {
           // ============ 常见问题 ============
           _buildSectionTitle("常见问题"),
           SizedBox(height: 12.h),
-          _buildQaItem(
-            "如何开始一段行程？",
-            "点击首页底部的「开始」按钮，确认当前位置后即可开始记录你的城市足迹。",
-          ),
+          _buildQaItem("如何开始一段行程？", "点击首页底部的「开始」按钮，确认当前位置后即可开始记录你的城市足迹。"),
           _buildDivider(),
-          _buildQaItem(
-            "如何查看我的行程记录？",
-            "在侧边菜单或个人主页中点击「全部行程」，即可查看所有历史记录。",
-          ),
+          _buildQaItem("如何查看我的行程记录？", "在侧边菜单或个人主页中点击「全部行程」，即可查看所有历史记录。"),
           _buildDivider(),
-          _buildQaItem(
-            "如何修改个人信息？",
-            "进入个人主页，点击右上角的「修改个人信息」即可修改昵称和头像。",
-          ),
+          _buildQaItem("如何修改个人信息？", "进入个人主页，点击右上角的「修改个人信息」即可修改昵称和头像。"),
           _buildDivider(),
-          _buildQaItem(
-            "行程数据会丢失吗？",
-            "所有行程数据会同步至云端，更换设备后登录同一账号即可恢复数据。",
-          ),
+          _buildQaItem("行程数据会丢失吗？", "所有行程数据会同步至云端，更换设备后登录同一账号即可恢复数据。"),
 
           SizedBox(height: 32.h),
 
@@ -74,14 +62,18 @@ class HelpPage extends StatelessWidget {
             icon: Icons.bug_report_outlined,
             title: "提交 Bug",
             subtitle: "在 GitHub 提交 Issue 反馈问题",
-            onTap: () => _launchUrl("https://github.com/Limpid-8818/CityTrace/issues/new"),
+            onTap: () => _launchUrl(
+              "https://github.com/Limpid-8818/CityTrace/issues/new",
+            ),
           ),
           _buildDivider(),
           _buildActionItem(
             icon: Icons.lightbulb_outline,
             title: "功能建议",
             subtitle: "告诉我们你的想法和建议",
-            onTap: () => _launchUrl("https://github.com/Limpid-8818/CityTrace/issues/new"),
+            onTap: () => _launchUrl(
+              "https://github.com/Limpid-8818/CityTrace/issues/new",
+            ),
           ),
           _buildDivider(),
           _buildActionItem(
@@ -108,27 +100,30 @@ class HelpPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.primaryOpacity005,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(
-                color: AppColors.primaryOpacity015,
-              ),
+              border: Border.all(color: AppColors.primaryOpacity015),
             ),
             child: Column(
               children: [
-                Text(
-                  "CityTrace",
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
+                Image.asset(
+                  'assets/images/Transparent background.png',
+                  width: 140.w,
+                  height: 40.h,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Text(
+                      "CityTrace",
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: 4.h),
                 Text(
                   "版本 1.0.0",
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                 ),
                 SizedBox(height: 12.h),
                 Text(
@@ -154,10 +149,7 @@ class HelpPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-      ),
+      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
     );
   }
 

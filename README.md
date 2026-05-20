@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/citytrace_app_icon.jpg" alt="CityTrace Logo" width="200">
+  <img src="assets/images/Transparent background.png" alt="CityTrace Logo" width="200">
 </p>
 
 <h1 align="center">CityTrace（城市寻迹）</h1>

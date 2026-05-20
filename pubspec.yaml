@@ -1,6 +1,6 @@
 name: citytrace
 description: "A Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # 网络请求
   dio: ^5.9.0
 
@@ -58,6 +58,7 @@ dependencies:
   screenshot: ^3.0.0
   share_plus: ^12.0.2
   gal: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -69,7 +70,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/citytrace_app_icon.jpg 
+    - assets/images/citytrace_app_icon.jpg
+    - "assets/images/Transparent background.png"
+    - assets/images/Title.png
 
 flutter_launcher_icons:
   android: "launcher_icon"

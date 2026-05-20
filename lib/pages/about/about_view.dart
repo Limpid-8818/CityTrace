@@ -34,10 +34,10 @@ class AboutView extends StatelessWidget {
           children: [
             SizedBox(height: 50.h),
 
-            // 1. Logo 区域
+            // 1. Logo 区域（使用透明背景 PNG）
             Center(
               child: Image.asset(
-                'assets/images/citytrace_app_icon.jpg',
+                'assets/images/Transparent background.png',
                 width: 180.w,
                 height: 180.w,
                 fit: BoxFit.contain,
