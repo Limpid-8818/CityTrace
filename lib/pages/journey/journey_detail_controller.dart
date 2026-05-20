@@ -12,6 +12,7 @@ import '../../services/journey_management/moment_service.dart';
 import '../../controllers/map_trace_controller.dart';
 import '../../core/utils/media_util.dart';
 import '../home/home_controller.dart';
+import '../journey/share_view_page.dart';
 
 class JourneyDetailController extends GetxController {
   // 依赖注入
@@ -79,6 +80,20 @@ class JourneyDetailController extends GetxController {
 
   void goToNotePage() {
     Get.toNamed('/note', arguments: journeyId);
+  }
+
+  /// 跳转到分享卡片预览页面
+  void goToSharePage() {
+    if (journey.value == null) return;
+    Get.to(
+      () => ShareViewPage(
+        journey: journey.value!,
+        moments: moments.toList(),
+        displayDuration: displayDuration,
+      ),
+      transition: Transition.downToUp,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   /// 结束行程

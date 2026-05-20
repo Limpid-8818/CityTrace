@@ -105,10 +105,34 @@ class JourneyDetailPage extends StatelessWidget {
         ),
       ),
       actions: [
-        if (controller.isEnded) // 当行程结束则显示生成入口
-          IconButton(
-            icon: const Icon(Icons.auto_awesome),
-            onPressed: () => controller.goToNotePage(),
+        if (controller.isEnded) // 当行程结束则显示操作菜单
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (value) {
+              if (value == 'note') {
+                controller.goToNotePage();
+              } else if (value == 'share') {
+                controller.goToSharePage();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'note',
+                child: ListTile(
+                  leading: Icon(Icons.auto_awesome, color: AppColors.primary),
+                  title: Text('AI 寻迹'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'share',
+                child: ListTile(
+                  leading: Icon(Icons.share_outlined, color: AppColors.primary),
+                  title: Text('分享旅程'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
       ],
     );
