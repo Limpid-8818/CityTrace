@@ -85,9 +85,13 @@ class LoginController extends GetxController {
     final saltedPassword = CryptoUtil.hashPassword(password, account);
 
     bool success = false;
+    String? errorMsg;
+
     if (isLogin.value) {
       // 执行登录
-      success = await _authService.login(account, saltedPassword);
+      final result = await _authService.login(account, saltedPassword);
+      success = result.key;
+      errorMsg = result.value;
     } else {
       // 执行注册
       if (username.isEmpty) {
@@ -100,6 +104,9 @@ class LoginController extends GetxController {
         account: account,
         password: saltedPassword,
       );
+      if (!success) {
+        errorMsg = '注册失败，请稍后重试';
+      }
     }
 
     if (success) {
@@ -107,7 +114,20 @@ class LoginController extends GetxController {
       final profile = await _authService.getProfile();
       if (profile != null) {
         _userController.onLoginSuccess(profile);
+      } else {
+        // getProfile 失败但登录成功，至少跳转到主页
+        Get.offAllNamed('/home');
       }
+    } else {
+      // 显示具体的错误信息
+      Get.snackbar(
+        "登录失败",
+        errorMsg ?? '请检查账号密码后重试',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 3),
+      );
     }
 
     isLoading.value = false;
