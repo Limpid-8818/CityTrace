@@ -441,10 +441,29 @@ class MomentCard {
   static Widget _buildImageContent(MomentModel moment) {
     final controller = Get.find<JourneyDetailController>();
 
+    // 收集当前行程中的所有图片 URL，用于预览页面的左右滑动切换
+    final List<String> allImageUrls = controller.moments
+        .where((m) => m.type == "image" && m.media != null && m.media!.isNotEmpty)
+        .map((m) => m.media!)
+        .toList();
+    final currentIndex = allImageUrls.indexOf(moment.media ?? "");
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
+          onTap: () {
+            if (moment.media != null && moment.media!.isNotEmpty) {
+              Get.to(
+                () => ImagePreviewPage(
+                  imageUrls: allImageUrls,
+                  initialIndex: currentIndex >= 0 ? currentIndex : 0,
+                ),
+                transition: Transition.fadeIn,
+                duration: const Duration(milliseconds: 200),
+              );
+            }
+          },
           onLongPress: () => _showImageOptions(controller, moment.media!),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12.r),
