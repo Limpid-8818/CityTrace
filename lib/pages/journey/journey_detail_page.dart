@@ -9,6 +9,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../components/map_view.dart';
+import 'image_preview_page.dart';
 import '../../core/utils/media_util.dart';
 import '../../core/utils/permission_util.dart';
 import '../../models/moment_model.dart';
