@@ -248,6 +248,21 @@ class _SwipeableJourneyCardState extends State<SwipeableJourneyCard>
                 ),
               ),
             ),
+          // 行程描述（AI 游记截取，可在 AI 寻迹成书中手动修改）
+          if (journey.description != null && journey.description!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: 8.h),
+              child: Text(
+                journey.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.grey.shade600,
+                  height: 1.3,
+                ),
+              ),
+            ),
         ],
       ),
     );

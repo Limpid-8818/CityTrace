@@ -5,9 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../services/ai_service.dart';
+import '../../services/journey_management/journey_service.dart';
+import '../../models/journey_model.dart';
 
 class NoteController extends GetxController {
   final AIService _aiService = AIService();
+  final JourneyService _journeyService = JourneyService();
 
   // 接收参数
   late String journeyId;
@@ -20,6 +23,13 @@ class NoteController extends GetxController {
   final RxList<String> hashtags = <String>[].obs;
   final RxBool isGenerating = false.obs;
   final RxBool isEditing = false.obs; // 是否处于编辑模式
+  final RxInt currentTabIndex = 0.obs; // 0=游记内容, 1=游记卡片
+
+  // 行程信息
+  final Rx<JourneyModel?> journey = Rx<JourneyModel?>(null);
+
+  // 描述文本（从生成结果提取前1-2句作为描述，或用户手动编辑）
+  final RxString description = "".obs;
 
   // 用于流式打字机效果 -- 界面上实际绑定的内容
   final RxString displayedTitle = "".obs;
@@ -28,9 +38,13 @@ class NoteController extends GetxController {
   // 用于编辑的 TextEditingController
   late TextEditingController titleEditController;
   late TextEditingController bodyEditController;
+  late TextEditingController descriptionEditController;
 
   // 内部流式控制
   Timer? _typeTimer;
+
+  // 游记分享卡片导出 Key（用于导出游记本身为图片）
+  final GlobalKey noteShareCardKey = GlobalKey();
 
   // 预设风格选项 (对应 API 文档)
   final List<Map<String, String>> styleOptions = [
@@ -46,6 +60,8 @@ class NoteController extends GetxController {
     journeyId = Get.arguments ?? "";
     titleEditController = TextEditingController();
     bodyEditController = TextEditingController();
+    descriptionEditController = TextEditingController();
+    _loadJourney();
   }
 
   @override
@@ -53,7 +69,18 @@ class NoteController extends GetxController {
     _typeTimer?.cancel();
     titleEditController.dispose();
     bodyEditController.dispose();
+    descriptionEditController.dispose();
     super.onClose();
+  }
+
+  Future<void> _loadJourney() async {
+    final journeyData = await _journeyService.getJourneyDetail(journeyId);
+    if (journeyData != null) {
+      journey.value = journeyData;
+      if (journeyData.description != null && journeyData.description!.isNotEmpty) {
+        description.value = journeyData.description!;
+      }
+    }
   }
 
   /// 执行生成逻辑
@@ -83,12 +110,29 @@ class NoteController extends GetxController {
       if (result['tags'] != null) {
         hashtags.value = List<String>.from(result['tags']);
       }
+      // 自动提取前1-2句作为描述
+      _autoExtractDescription();
       // 开始打字机效果
       _startTypingEffect();
     } else {
       // API 失败，恢复非生成状态
       isGenerating.value = false;
     }
+  }
+
+  /// 从生成正文中提取前1-2句作为描述
+  void _autoExtractDescription() {
+    final body = generatedBody.value;
+    if (body.isEmpty) return;
+
+    // 按句号、问号、感叹号、换行分割
+    final sentences = body.split(RegExp(r'[。！？\n]')).where((s) => s.trim().isNotEmpty).toList();
+    if (sentences.isEmpty) return;
+
+    // 取前两句，不足则取全部
+    final excerpt = sentences.take(2).join('。').trim();
+    description.value = excerpt.endsWith('。') ? excerpt : '$excerpt。';
+    descriptionEditController.text = description.value;
   }
 
   /// 流式打字机效果：逐字将 generatedBody 展示到 displayedBody
@@ -129,6 +173,7 @@ class NoteController extends GetxController {
   void enterEditMode() {
     titleEditController.text = displayedTitle.value;
     bodyEditController.text = displayedBody.value;
+    descriptionEditController.text = description.value;
     isEditing.value = true;
     // 停止正在进行的打字机效果
     _typeTimer?.cancel();
@@ -141,9 +186,36 @@ class NoteController extends GetxController {
   void saveEdits() {
     generatedTitle.value = titleEditController.text;
     generatedBody.value = bodyEditController.text;
+    description.value = descriptionEditController.text;
     displayedTitle.value = titleEditController.text;
     displayedBody.value = bodyEditController.text;
     isEditing.value = false;
+    // 保存描述到行程
+    _saveDescriptionToJourney();
+  }
+
+  /// 分享游记卡片：导出为图片并分享
+  Future<void> shareNoteCardAsImage() async {
+    // 实际导出由 NotePage 的 RepaintBoundary 完成
+    // 此处仅作为逻辑入口标记
+  }
+
+  /// 保存游记卡片到相册
+  Future<void> saveNoteCardToGallery() async {
+    // 实际导出由 NotePage 的 RepaintBoundary 完成
+    // 此处仅作为逻辑入口标记
+  }
+
+  /// 保存描述到行程（mock）
+  Future<void> _saveDescriptionToJourney() async {
+    if (journeyId.isEmpty) return;
+    final updatedJourney = await _journeyService.updateJourney(
+      journeyId,
+      description: description.value,
+    );
+    if (updatedJourney != null) {
+      journey.value = updatedJourney;
+    }
   }
 
   /// 分享逻辑：复制到剪贴板
