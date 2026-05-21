@@ -18,6 +18,7 @@ import '../models/journey_model.dart';
 import '../models/moment_model.dart';
 import '../mock/mock_data.dart';
 import 'static_route_thumbnail.dart';
+import 'ui/info_pill.dart';
 
 /// 分享卡片组件
 /// 可将行程详情渲染为一张精美的图片，支持导出和分享
@@ -284,27 +285,14 @@ class _CardContent extends StatelessWidget {
               ),
               const Spacer(),
               if (moments.isNotEmpty && moments.first.location.name != null)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryOpacity010,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.location_on, size: 12.r, color: AppColors.primary),
-                      SizedBox(width: 4.w),
-                      Text(
-                        moments.first.location.name!.split("·").last.trim(),
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                InfoPill(
+                  icon: Icons.location_on,
+                  text: moments.first.location.name!.split("·").last.trim(),
+                  backgroundColor: AppColors.primaryOpacity010,
+                  iconColor: AppColors.primary,
+                  textColor: AppColors.primary,
+                  fontSize: 10,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 ),
             ],
           ),

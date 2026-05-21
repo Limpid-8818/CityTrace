@@ -65,10 +65,14 @@ class ApiClient {
             // 请求成功，返回响应
             return handler.next(response);
           } else {
-            _dispatchError(code, msg);
+            // 登录/注册接口的错误由调用方自行处理，避免重复提示
+            if (!_isAuthPath(response.requestOptions.path)) {
+              _dispatchError(code, msg);
+            }
             return handler.reject(
               DioException(
                 requestOptions: response.requestOptions,
+                response: response,
                 error: msg,
                 type: DioExceptionType.badResponse,
               ),
@@ -83,7 +87,10 @@ class ApiClient {
             final data = response.data;
             // 情况 A：后端返回了标准的业务错误 JSON
             if (data.containsKey("code") && data.containsKey("msg")) {
-              _dispatchError(data["code"], data["msg"]);
+              // 认证接口的错误由调用方自行处理
+              if (!_isAuthPath(response.requestOptions.path)) {
+                _dispatchError(data["code"], data["msg"]);
+              }
             } else {
               // 情况 B：后端返回了非标准响应
               _handlePureHttpError(e);
@@ -108,6 +115,11 @@ class ApiClient {
         responseBody: true,
       ),
     );
+  }
+
+  /// 判断是否为认证相关路径（登录/注册），这些接口的错误由调用方自行处理
+  bool _isAuthPath(String url) {
+    return url.contains('/user/login') || url.contains('/user/register');
   }
 
   // 统一业务错误处理

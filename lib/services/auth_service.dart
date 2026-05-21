@@ -31,7 +31,8 @@ class AuthService {
   }
 
   /// 用户登录
-  Future<bool> login(String account, String password) async {
+  /// 返回 (是否成功, 错误信息)
+  Future<MapEntry<bool, String?>> login(String account, String password) async {
     try {
       final response = await _apiClient.post(
         '/user/login',
@@ -40,11 +41,26 @@ class AuthService {
 
       if (response.data['code'] == 0) {
         await _saveToken(response.data['data']);
-        return true;
+        return MapEntry(true, null);
       }
-      return false;
+      // 后端返回了业务错误码，提取错误信息
+      final msg = response.data['msg'] ?? '登录失败，请检查账号密码';
+      return MapEntry(false, msg);
     } catch (e) {
-      return false;
+      // 尝试从 DioException 中提取后端返回的错误信息
+      String errorMsg = '网络异常，请稍后重试';
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.connectionError) {
+          errorMsg = '无法连接到服务器，请检查网络';
+        } else if (e.response?.data is Map) {
+          final data = e.response!.data as Map;
+          if (data['msg'] != null && data['msg'].toString().isNotEmpty) {
+            errorMsg = data['msg'];
+          }
+        }
+      }
+      return MapEntry(false, errorMsg);
     }
   }
 

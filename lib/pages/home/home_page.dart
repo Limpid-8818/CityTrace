@@ -1,10 +1,10 @@
-import 'dart:ui' as ui;
 import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
+import '../../components/app_popup_menu.dart';
 import '../../components/map_view.dart';
 import '../../components/ui/info_pill.dart';
 import 'home_controller.dart';
@@ -240,12 +240,27 @@ class HomePage extends StatelessWidget {
             ),
           ),
         ),
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_horiz, color: Colors.black54),
-          offset: Offset(0, 50.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
+        AppPopupMenu<String>(
+          items: const [
+            PopupMenuItemData(
+              value: 'settings',
+              title: '设置',
+              icon: Icons.settings_outlined,
+              iconColor: AppColors.primary,
+            ),
+            PopupMenuItemData(
+              value: 'help',
+              title: '帮助与反馈',
+              icon: Icons.help_outline,
+              iconColor: AppColors.primary,
+            ),
+            PopupMenuItemData(
+              value: 'about',
+              title: '关于我们',
+              icon: Icons.info_outline,
+              iconColor: AppColors.primary,
+            ),
+          ],
           onSelected: (value) {
             if (value == 'about') {
               Get.toNamed('/about');
@@ -257,30 +272,8 @@ class HomePage extends StatelessWidget {
               Fluttertoast.showToast(msg: "点击了 $value");
             }
           },
-          itemBuilder: (context) => [
-            _buildPopupItem("设置", Icons.settings_outlined, "settings"),
-            _buildPopupItem("帮助与反馈", Icons.help_outline, "help"),
-            _buildPopupItem("关于我们", Icons.info_outline, "about"),
-          ],
         ),
       ],
-    );
-  }
-
-  PopupMenuItem<String> _buildPopupItem(
-    String title,
-    IconData icon,
-    String value,
-  ) {
-    return PopupMenuItem(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon, size: 20.r, color: Colors.black87),
-          SizedBox(width: 12.w),
-          Text(title),
-        ],
-      ),
     );
   }
 
@@ -311,11 +304,13 @@ class HomePage extends StatelessWidget {
           InfoPill(
             icon: Icons.location_on_outlined,
             text: controller.locationDisplay.value,
+            backgroundColor: AppColors.white,
           ),
           SizedBox(width: 10.w),
           InfoPill(
             icon: Icons.wb_cloudy_outlined,
             text: controller.weatherDisplay.value,
+            backgroundColor: AppColors.white,
           ),
         ],
       ),

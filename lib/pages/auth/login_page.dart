@@ -5,13 +5,32 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'login_controller.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  late final LoginController controller;
+
+  @override
+  void initState() {
+    super.initState();
     // 注入控制器
-    final controller = Get.put(LoginController());
+    controller = Get.put(LoginController());
+  }
+
+  @override
+  void dispose() {
+    // 页面销毁时移除控制器，避免内存泄漏
+    Get.delete<LoginController>();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,

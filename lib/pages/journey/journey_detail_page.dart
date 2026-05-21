@@ -8,7 +8,10 @@ import 'package:get/get.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../components/app_dialog.dart';
+import '../../components/app_popup_menu.dart';
 import '../../components/map_view.dart';
+import '../../components/ui/info_pill.dart';
 import 'image_preview_page.dart';
 import '../../core/utils/media_util.dart';
 import '../../core/utils/permission_util.dart';
@@ -106,35 +109,31 @@ class JourneyDetailPage extends StatelessWidget {
         ),
       ),
       actions: [
-        if (controller.isEnded) // 当行程结束则显示操作菜单
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'note') {
-                controller.goToNotePage();
-              } else if (value == 'share') {
-                controller.goToSharePage();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'note',
-                child: ListTile(
-                  leading: Icon(Icons.auto_awesome, color: AppColors.primary),
-                  title: Text('AI 寻迹'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'share',
-                child: ListTile(
-                  leading: Icon(Icons.share_outlined, color: AppColors.primary),
-                  title: Text('分享旅程'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
+        AppPopupMenu<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          enabled: controller.isEnded,
+          items: const [
+            PopupMenuItemData(
+              value: 'note',
+              title: 'AI 寻迹',
+              icon: Icons.auto_awesome,
+              iconColor: AppColors.primary,
+            ),
+            PopupMenuItemData(
+              value: 'share',
+              title: '分享旅程',
+              icon: Icons.share_outlined,
+              iconColor: AppColors.primary,
+            ),
+          ],
+          onSelected: (value) {
+            if (value == 'note') {
+              controller.goToNotePage();
+            } else if (value == 'share') {
+              controller.goToSharePage();
+            }
+          },
+        ),
       ],
     );
   }
@@ -376,21 +375,17 @@ class JourneyDetailPage extends StatelessWidget {
             child: Row(
               children: moment.tags!
                   .map(
-                    (tag) => Container(
-                      margin: EdgeInsets.only(right: 8.w),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryOpacity005,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Text(
-                        "#$tag",
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: AppColors.primary,
+                    (tag) => Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: InfoPill(
+                        icon: Icons.tag,
+                        text: "#$tag",
+                        iconColor: AppColors.primary,
+                        textColor: AppColors.primary,
+                        fontSize: 11,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
                       ),
                     ),
@@ -458,45 +453,55 @@ class JourneyDetailPage extends StatelessWidget {
         activeIcon: Icons.close,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        // 展开时主按钮变暗 20%，提示"阻断状态，再次点击关闭"
+        activeBackgroundColor: AppColors.primaryDarker,
+        // 错落淡出总时长 200ms，配合 easeOutBack 形成弹簧般的升起效果
+        animationDuration: const Duration(milliseconds: 200),
+        animationCurve: Curves.easeOutBack,
+        useRotationAnimation: true,
+        animationAngle: 0.785, // 45 度旋转，＋ 变 ×
         visible: true,
         curve: Curves.bounceIn,
         children: [
+          // 结束行程 - 唯一危险操作，白底 + 低饱和度朱红图标
           SpeedDialChild(
-            child: const Icon(Icons.stop),
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.flag),
+            backgroundColor: Colors.white,
+            foregroundColor: Color(0xFFE53935),
             shape: CircleBorder(),
             label: '结束行程',
+            labelStyle: TextStyle(color: Color(0xFFE53935)),
             onTap: () => _showEndJourneyConfirm(),
           ),
+          // 以下四个为并列的记录/添加功能，统一白底 + 鸭绿图标
           SpeedDialChild(
-            child: const Icon(Icons.mic),
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.graphic_eq),
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
             shape: CircleBorder(),
             label: '录音感悟',
             onTap: () => MomentBottomSheet.showAudioRecorder(controller),
           ),
           SpeedDialChild(
-            child: const Icon(Icons.camera_alt),
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.photo_camera_outlined),
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
             shape: CircleBorder(),
             label: '拍照记录',
             onTap: () => MomentBottomSheet.showImagePicker(controller),
           ),
           SpeedDialChild(
-            child: const Icon(Icons.edit),
-            backgroundColor: Colors.purple,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.edit_note),
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
             shape: CircleBorder(),
             label: '手写日志',
             onTap: () => MomentBottomSheet.showTextEditor(controller),
           ),
           SpeedDialChild(
-            child: const Icon(Icons.location_on),
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.flag_outlined),
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
             shape: CircleBorder(),
             label: '添加标记',
             onTap: () => MomentBottomSheet.showLocationMarker(controller),
@@ -508,17 +513,13 @@ class JourneyDetailPage extends StatelessWidget {
 
   void _showEndJourneyConfirm() {
     JourneyDetailController controller = Get.find<JourneyDetailController>();
-    Get.defaultDialog(
-      title: "提示",
-      middleText: "确定要结束本次城市寻迹吗？",
-      textConfirm: "确定",
-      textCancel: "取消",
-      confirmTextColor: Colors.white,
-      buttonColor: AppColors.primary,
-      onConfirm: () {
-        controller.onEndJourney();
-        Get.back(); // 关弹窗
-      },
+    AppConfirmDialog.show(
+      title: "结束行程",
+      message: "确定要结束本次城市寻迹吗？",
+      confirmText: "确定",
+      cancelText: "取消",
+      confirmColor: AppColors.primary,
+      onConfirm: () => controller.onEndJourney(),
     );
   }
 }
