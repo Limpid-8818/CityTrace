@@ -1,3 +1,4 @@
+import 'package:citytrace/components/app_dialog.dart';
 import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -120,7 +121,18 @@ class HomePage extends StatelessWidget {
           _buildDrawerItem(
             Icons.logout,
             "退出登录",
-            () => controller.logout(),
+            () {
+              AppConfirmDialog.show(
+                title: "确认退出",
+                message: "确定要退出登录吗？",
+                confirmText: "确定",
+                cancelText: "取消",
+                confirmColor: Colors.red,
+                onConfirm: () {
+                  controller.logout();
+                },
+              );
+            },
             color: Colors.red,
           ),
           SizedBox(height: 32.h),

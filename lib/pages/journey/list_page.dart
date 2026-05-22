@@ -192,7 +192,16 @@ class ListPage extends GetView<ListController> {
         icon: Icons.delete_outline,
         label: "删除行程",
         color: Colors.red,
-        onTap: () => controller.deleteJourney(journey.journeyId),
+        onTap: () {
+          AppConfirmDialog.show(
+            title: "确认删除",
+            message: "确定要删除行程「${journey.title}」吗？此操作不可恢复。",
+            confirmText: "确定删除",
+            cancelText: "取消",
+            confirmColor: Colors.red,
+            onConfirm: () => controller.deleteJourney(journey.journeyId),
+          );
+        },
       ),
     ];
     AppActionSheet.show(title: "行程操作", actions: actions);
