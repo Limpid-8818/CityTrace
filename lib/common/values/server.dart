@@ -1,9 +1,16 @@
-// ignore_for_file: constant_identifier_names
+import 'environment.dart';
 
+/// 向后兼容层 —— 适配旧代码中 `ServerConfig.BASE_URL` 的调用方式
+///
+/// 原本是硬编码常量，现在统一委托给 [AppEnvConfig] 动态获取。
+/// 新代码建议直接使用 `AppEnvConfig.baseUrl`。
 class ServerConfig {
-  //static const String BASE_URL = "http://go/server/address:xxxx/api/v1";
-  static const String BASE_URL =
-      "http://10.0.2.2:4523/m1/7557631-7295075-default/api/v1";
-  static const int CONNECT_TIMEOUT = 60000;
-  static const int RECEIVE_TIMEOUT = 60000;
+  /// 后端 API Base URL（委托给 AppEnvConfig）
+  static String get BASE_URL => AppEnvConfig.baseUrl;
+
+  /// 连接超时（毫秒，委托给 AppEnvConfig）
+  static int get CONNECT_TIMEOUT => AppEnvConfig.connectTimeout;
+
+  /// 接收超时（毫秒，委托给 AppEnvConfig）
+  static int get RECEIVE_TIMEOUT => AppEnvConfig.receiveTimeout;
 }
