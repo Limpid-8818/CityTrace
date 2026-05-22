@@ -17,6 +17,7 @@ import '../core/theme/app_colors.dart';
 import '../models/journey_model.dart';
 import '../models/moment_model.dart';
 import '../mock/mock_data.dart';
+import 'app_skeleton.dart';
 import 'static_route_thumbnail.dart';
 import 'ui/info_pill.dart';
 
@@ -200,15 +201,21 @@ class _CardContent extends StatelessWidget {
           Image.network(
             journey.cover,
             fit: BoxFit.cover,
-            errorBuilder: (c, e, s) => Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+            errorBuilder: (c, e, s) => AppSkeletonImage(
+              width: double.infinity,
+              height: 200.w,
+              borderRadius: 24,
+              icon: Icons.image_not_supported_outlined,
+              iconSize: 40,
             ),
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return AppSkeletonImage(
+                width: double.infinity,
+                height: 200.w,
+                borderRadius: 24,
+              );
+            },
           ),
           Container(
             decoration: BoxDecoration(

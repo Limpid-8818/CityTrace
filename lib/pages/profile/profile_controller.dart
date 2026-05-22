@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:citytrace/core/theme/app_colors.dart';
+import 'package:citytrace/components/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -114,73 +114,43 @@ class ProfileController extends GetxController {
     if (currentUser == null) return;
 
     try {
-      // 显示选择方式对话框
       final ImagePicker picker = ImagePicker();
+      XFile? image;
 
-      // 选择图片来源
-      final XFile? image = await Get.dialog<XFile?>(
-        Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "选择头像来源",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final XFile? photo = await picker.pickImage(
-                      source: ImageSource.camera,
-                      maxWidth: 800,
-                      maxHeight: 800,
-                      imageQuality: 80,
-                    );
-                    Get.back(result: photo);
-                  },
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text("拍照"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 48),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.gallery,
-                      maxWidth: 800,
-                      maxHeight: 800,
-                      imageQuality: 80,
-                    );
-                    Get.back(result: image);
-                  },
-                  icon: const Icon(Icons.photo_library),
-                  label: const Text("从相册选择"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 48),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text("取消"),
-                ),
-              ],
-            ),
+      // 使用统一的 AppActionSheet 选择图片来源
+      await AppActionSheet.show(
+        title: "选择头像来源",
+        actions: [
+          AppSheetAction(
+            icon: Icons.camera_alt_outlined,
+            label: "拍照",
+            onTap: () async {
+              image = await picker.pickImage(
+                source: ImageSource.camera,
+                maxWidth: 800,
+                maxHeight: 800,
+                imageQuality: 80,
+              );
+            },
           ),
-        ),
+          AppSheetAction(
+            icon: Icons.photo_library_outlined,
+            label: "从相册选择",
+            onTap: () async {
+              image = await picker.pickImage(
+                source: ImageSource.gallery,
+                maxWidth: 800,
+                maxHeight: 800,
+                imageQuality: 80,
+              );
+            },
+          ),
+        ],
       );
 
       if (image != null) {
         // 上传头像到服务器
-        final File imageFile = File(image.path);
+        final File imageFile = File(image!.path);
         final String? avatarUrl = await _authService.uploadAvatar(imageFile);
 
         if (avatarUrl != null) {

@@ -1,5 +1,5 @@
+import 'package:citytrace/common/values/environment.dart';
 import 'package:citytrace/controllers/user_controller.dart';
-import 'package:citytrace/mock/mock_config.dart';
 import 'package:citytrace/mock/mock_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -16,10 +16,10 @@ class ApiClient {
   ApiClient.internal() {
     BaseOptions options = BaseOptions(
       baseUrl: ServerConfig.BASE_URL,
-      connectTimeout: const Duration(
+      connectTimeout: Duration(
         milliseconds: ServerConfig.CONNECT_TIMEOUT,
       ),
-      receiveTimeout: const Duration(
+      receiveTimeout: Duration(
         milliseconds: ServerConfig.RECEIVE_TIMEOUT,
       ),
       headers: {},
@@ -30,7 +30,7 @@ class ApiClient {
     dio = Dio(options);
 
     // 如果启用 Mock 模式，优先添加 Mock 拦截器
-    if (MockConfig.enableMock) {
+    if (AppEnvConfig.enableMock) {
       dio.interceptors.add(MockInterceptor());
     }
 
@@ -105,16 +105,18 @@ class ApiClient {
       ),
     );
 
-    // debug用日志拦截器
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: false,
-        responseBody: true,
-      ),
-    );
+    // 非生产环境添加日志拦截器
+    if (AppEnvConfig.enableHttpLog) {
+      dio.interceptors.add(
+        LogInterceptor(
+          request: true,
+          requestHeader: true,
+          requestBody: true,
+          responseHeader: false,
+          responseBody: true,
+        ),
+      );
+    }
   }
 
   /// 判断是否为认证相关路径（登录/注册），这些接口的错误由调用方自行处理

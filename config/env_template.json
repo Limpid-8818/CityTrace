@@ -1,0 +1,12 @@
+{
+  "//_comment": "CityTrace - 环境配置模板",
+  "//_usage": "1. 复制此文件为对应的环境配置文件，例如: cp env_template.json development.json，填入真实值",
+  "//_usage2": "2. 运行: flutter run --dart-define-from-file=config/development.json",
+  "//_build": "   构建: flutter build apk --dart-define-from-file=config/production.json",
+
+  "APP_ENV": "dev",
+  "BASE_URL": "http://YOUR_API_HOST:PORT/api/v1",
+  "CONNECT_TIMEOUT": 30000,
+  "RECEIVE_TIMEOUT": 60000,
+  "ENABLE_MOCK": true
+}

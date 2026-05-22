@@ -471,14 +471,21 @@ class MomentCard {
               moment.media!,
               fit: BoxFit.cover,
               width: double.infinity,
-              errorBuilder: (c, e, s) => Container(
+              errorBuilder: (c, e, s) => AppSkeletonImage(
+                width: double.infinity,
                 height: 150.h,
-                color: Colors.grey.shade100,
-                child: const Icon(
-                  Icons.broken_image_outlined,
-                  color: Colors.grey,
-                ),
+                borderRadius: 12,
+                icon: Icons.broken_image_outlined,
+                iconSize: 32,
               ),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return AppSkeletonImage(
+                  width: double.infinity,
+                  height: 150.h,
+                  borderRadius: 12,
+                );
+              },
             ),
           ),
         ),

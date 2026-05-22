@@ -1,3 +1,4 @@
+import 'package:citytrace/components/app_dialog.dart';
 import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -447,62 +448,27 @@ class ProfilePage extends StatelessWidget {
   void _showEditProfileDialog() {
     final controller = Get.find<ProfileController>();
     final user = controller.currentUser;
-    final TextEditingController usernameController = TextEditingController(
-      text: user?.username ?? '',
-    );
 
-    Get.defaultDialog(
+    AppInputDialog.show(
       title: "修改个人信息",
-      content: Column(
-        children: [
-          SizedBox(height: 16.h),
-          TextField(
-            controller: usernameController,
-            decoration: const InputDecoration(
-              labelText: "昵称",
-              border: OutlineInputBorder(),
-              hintText: "请输入新的昵称",
-            ),
-            maxLength: 20,
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade300,
-                  foregroundColor: Colors.black87,
-                ),
-                child: const Text("取消"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final newUsername = usernameController.text.trim();
-                  if (newUsername.isEmpty) {
-                    Get.snackbar("提示", "昵称不能为空");
-                    return;
-                  }
-                  if (newUsername.length > 20) {
-                    Get.snackbar("提示", "昵称不能超过20个字符");
-                    return;
-                  }
-                  controller.updateUsername(newUsername);
-                  Get.back();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryDark,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text("保存"),
-              ),
-            ],
-          ),
-        ],
-      ),
+      icon: Icons.person_outline_rounded,
+      hintText: "请输入新的昵称",
+      initialValue: user?.username ?? '',
+      confirmText: "保存",
+      validator: (value) {
+        if (value.trim().isEmpty) {
+          Get.snackbar("提示", "昵称不能为空");
+          return false;
+        }
+        if (value.trim().length > 20) {
+          Get.snackbar("提示", "昵称不能超过20个字符");
+          return false;
+        }
+        return true;
+      },
+      onConfirm: (value) async {
+        await controller.updateUsername(value.trim());
+      },
     );
   }
 
@@ -514,20 +480,14 @@ class ProfilePage extends StatelessWidget {
       height: 56.h,
       child: ElevatedButton(
         onPressed: () {
-          Get.defaultDialog(
+          AppConfirmDialog.show(
             title: "确认退出",
-            middleText: "确定要退出登录吗？",
-            textConfirm: "确定",
-            textCancel: "取消",
-            confirmTextColor: Colors.white,
-            buttonColor: Colors.red,
-            cancelTextColor: Colors.black54,
+            message: "确定要退出登录吗？",
+            confirmText: "确定",
+            cancelText: "取消",
+            confirmColor: Colors.red,
             onConfirm: () {
               controller.logout();
-              Get.back();
-            },
-            onCancel: () {
-              Get.back();
             },
           );
         },

@@ -1,3 +1,4 @@
+import 'package:citytrace/common/values/environment.dart';
 import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:citytrace/controllers/map_trace_controller.dart';
 import 'package:citytrace/core/utils/metadata_util.dart';
@@ -13,6 +14,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageUtil.init();
   await MetadataUtil.init();
+
+  print(
+    '═══════════════════════════════════════════\n'
+    '  CityTrace 启动\n'
+    '  环境: ${AppEnvConfig.current.label} (${AppEnvConfig.current.value})\n'
+    '  API: ${AppEnvConfig.baseUrl}\n'
+    '  Mock: ${AppEnvConfig.enableMock}\n'
+    '═══════════════════════════════════════════',
+  );
 
   // 全局注入 UserController 和 MapTraceController
   Get.put(UserController(), permanent: true);
@@ -32,8 +42,8 @@ class MainApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return GetMaterialApp(
-          title: 'CityTrace',
-          debugShowCheckedModeBanner: false,
+          title: AppEnvConfig.appName,
+          debugShowCheckedModeBanner: AppEnvConfig.showDebugBanner,
           // 默认主题配置
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),

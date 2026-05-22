@@ -8,6 +8,7 @@ import '../../models/journey_model.dart';
 import '../../components/journey_card.dart';
 import '../../components/classify_sheet.dart';
 import '../../components/app_dialog.dart';
+import '../../components/app_skeleton.dart';
 
 class ListPage extends GetView<ListController> {
   const ListPage({super.key});
@@ -108,7 +109,11 @@ class ListPage extends GetView<ListController> {
   Widget _buildJourneyList() {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const AppSkeletonList(
+          itemCount: 3,
+          itemHeight: 200,
+          borderRadius: 20,
+        );
       }
       if (controller.journeys.isEmpty) {
         return const EmptyJourneyState();
@@ -192,7 +197,16 @@ class ListPage extends GetView<ListController> {
         icon: Icons.delete_outline,
         label: "删除行程",
         color: Colors.red,
-        onTap: () => controller.deleteJourney(journey.journeyId),
+        onTap: () {
+          AppConfirmDialog.show(
+            title: "确认删除",
+            message: "确定要删除行程「${journey.title}」吗？此操作不可恢复。",
+            confirmText: "确定删除",
+            cancelText: "取消",
+            confirmColor: Colors.red,
+            onConfirm: () => controller.deleteJourney(journey.journeyId),
+          );
+        },
       ),
     ];
     AppActionSheet.show(title: "行程操作", actions: actions);
