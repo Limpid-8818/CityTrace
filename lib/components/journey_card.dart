@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../models/journey_model.dart';
 import '../models/folder_model.dart';
+import 'app_skeleton.dart';
 
 /// 可右滑归类的行程卡片（视差效果：封面图=背景层，遮罩+日期=前景层）
 class SwipeableJourneyCard extends StatefulWidget {
@@ -157,11 +158,21 @@ class _SwipeableJourneyCardState extends State<SwipeableJourneyCard>
                 height: 160.h,
                 width: 411.4.w,
                 fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => Container(
-                  color: Colors.teal.shade100,
-                  height: 160.h,
+                errorBuilder: (c, e, s) => AppSkeletonImage(
                   width: 411.4.w,
+                  height: 160.h,
+                  borderRadius: 20,
+                  icon: Icons.image_not_supported_outlined,
+                  iconSize: 32,
                 ),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return AppSkeletonImage(
+                    width: 411.4.w,
+                    height: 160.h,
+                    borderRadius: 20,
+                  );
+                },
               ),
             ),
             Positioned(

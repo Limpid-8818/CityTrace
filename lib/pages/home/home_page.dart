@@ -1,4 +1,5 @@
 import 'package:citytrace/components/app_dialog.dart';
+import 'package:citytrace/components/app_skeleton.dart';
 import 'package:citytrace/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -467,9 +468,10 @@ class HomePage extends StatelessWidget {
       }
 
       if (controller.isLoadingRecent.value) {
-        return SizedBox(
-          height: 150.h,
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2.r)),
+        return const AppSkeletonHorizontalList(
+          itemCount: 4,
+          itemWidth: 140,
+          itemHeight: 220,
         );
       }
 
@@ -520,7 +522,7 @@ class HomePage extends StatelessWidget {
         width: 140.w,
         margin: EdgeInsets.only(right: 16.w),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Hero(
               tag: "journey_cover_$journeyId",
@@ -532,29 +534,19 @@ class HomePage extends StatelessWidget {
                   width: 140.w,
                   fit: BoxFit.cover,
                   errorBuilder: (c, e, s) {
-                    return Container(
-                      height: 140,
-                      width: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: Colors.grey.shade300,
-                        size: 40.r,
-                      ),
+                    return AppSkeletonImage(
+                      width: 140.w,
+                      height: 140.w,
+                      borderRadius: 16,
+                      icon: Icons.image_not_supported_outlined,
                     );
                   },
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
-                    return Container(
-                      height: 140.h,
-                      width: 140.h,
-                      color: Colors.grey.shade50,
-                      child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2.r),
-                      ),
+                    return AppSkeletonImage(
+                      width: 140.w,
+                      height: 140.w,
+                      borderRadius: 16,
                     );
                   },
                 ),
@@ -566,10 +558,12 @@ class HomePage extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
             Text(
               trip['date']!,
               style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

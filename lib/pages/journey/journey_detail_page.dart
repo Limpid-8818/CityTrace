@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../components/app_dialog.dart';
 import '../../components/app_popup_menu.dart';
+import '../../components/app_skeleton.dart';
 import '../../components/map_view.dart';
 import '../../components/ui/info_pill.dart';
 import 'image_preview_page.dart';
@@ -31,7 +32,7 @@ class JourneyDetailPage extends StatelessWidget {
       backgroundColor: AppColors.pageBackground,
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildSkeletonLoading();
         }
         return CustomScrollView(
           slivers: [
@@ -84,8 +85,21 @@ class JourneyDetailPage extends StatelessWidget {
                 () => Image.network(
                   controller.journey.value?.cover ?? "",
                   fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) =>
-                      Container(color: AppColors.primaryLight),
+                  errorBuilder: (c, e, s) => AppSkeletonImage(
+                    width: double.infinity,
+                    height: 240.h,
+                    borderRadius: 0,
+                    icon: Icons.image_not_supported_outlined,
+                    iconSize: 48,
+                  ),
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return AppSkeletonImage(
+                      width: double.infinity,
+                      height: 240.h,
+                      borderRadius: 0,
+                    );
+                  },
                 ),
               ),
             ),
@@ -440,6 +454,57 @@ class JourneyDetailPage extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  /// 骨架屏加载状态
+  Widget _buildSkeletonLoading() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // 封面骨架
+          AppSkeletonImage(
+            width: double.infinity,
+            height: 240.h,
+            borderRadius: 0,
+          ),
+          // 概览卡片骨架
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            child: AppSkeletonCard(height: 100, borderRadius: 24),
+          ),
+          // 时间轴骨架
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              children: List.generate(3, (index) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 左侧节点骨架
+                      Padding(
+                        padding: EdgeInsets.only(top: 8.h),
+                        child: AppSkeleton(
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      // 右侧卡片骨架
+                      Expanded(
+                        child: AppSkeletonCard(height: 120, borderRadius: 16),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

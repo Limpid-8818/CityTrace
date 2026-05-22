@@ -8,6 +8,7 @@ import '../../models/journey_model.dart';
 import '../../components/journey_card.dart';
 import '../../components/classify_sheet.dart';
 import '../../components/app_dialog.dart';
+import '../../components/app_skeleton.dart';
 
 class ListPage extends GetView<ListController> {
   const ListPage({super.key});
@@ -108,7 +109,11 @@ class ListPage extends GetView<ListController> {
   Widget _buildJourneyList() {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const AppSkeletonList(
+          itemCount: 3,
+          itemHeight: 200,
+          borderRadius: 20,
+        );
       }
       if (controller.journeys.isEmpty) {
         return const EmptyJourneyState();
